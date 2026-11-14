@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Active Directory Users and Computers - [eaglebusiness.local]</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    /* Traditional Windows Server / MMC 3.0 Desktop Look & Feel */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, 'MS Sans Serif', Arial, sans-serif;
+      font-size: 12px;
+      background-color: #3A6EA5; /* Classic Windows Server Desktop Background */
+      color: #000000;
+      margin: 0;
+      user-select: none;
+    }
+    .font-mono-win {
+      font-family: 'Consolas', 'Lucida Console', monospace;
+    }
+
+    /* Classic Windows 3D Bevel Borders */
+    .win-window {
+      background-color: #F0F0F0;
+      border-top: 2px solid #FFFFFF;
+      border-left: 2px solid #FFFFFF;
+      border-right: 2px solid #404040;
+      border-bottom: 2px solid #404040;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    }
+    .win-raised {
+      background-color: #F0F0F0;
+      border-top: 1px solid #FFFFFF;
+      border-left: 1px solid #FFFFFF;
+      border-right: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+    }
+    .win-sunken {
+      background-color: #FFFFFF;
+      border-top: 1px solid #808080;
+      border-left: 1px solid #808080;
+      border-right: 1px solid #FFFFFF;
+      border-bottom: 1px solid #FFFFFF;
+    }
+    .win-btn {
+      background-color: #E1E1E1;
+      border: 1px solid #ADADAD;
+      color: #000000;
+      transition: background-color 0.1s, border-color 0.1s;
+    }
+    .win-btn:hover:not(:disabled) {
+      background-color: #E5F1FB;
+      border-color: #0078D7;
+    }
+    .win-btn:active:not(:disabled) {
+      background-color: #CCE4F7;
+      border-color: #005499;
+    }
+    .win-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Classic MMC Toolbar Icon Buttons */
+    .mmc-tool-btn {
+      border: 1px solid transparent;
+      padding: 3px 6px;
+      border-radius: 2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #111827;
+    }
+    .mmc-tool-btn:hover:not(:disabled) {
+      background-color: #E5F1FB;
+      border-color: #0078D7;
+    }
+    .mmc-tool-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Classic Windows Explorer / ADUC Column Header */
+    .aduc-th {
+      background: linear-gradient(to bottom, #FFFFFF 0%, #F3F4F6 60%, #E5E7EB 100%);
+      border-right: 1px solid #D1D5DB;
+      border-bottom: 1px solid #9CA3AF;
+      font-weight: 600;
+      font-size: 11px;
+      color: #1F2937;
+      padding: 5px 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .aduc-th:hover {
+      background: linear-gradient(to bottom, #F0F7FF 0%, #DCEBFA 100%);
+    }
+
+    /* Classic Windows Selection Row */
+    .aduc-row {
+      border-bottom: 1px solid #F1F5F9;
+      font-size: 11.5px;
+    }
+    .aduc-row:hover {
+      background-color: #E8F2FC;
+    }
+    .aduc-row.selected {
+      background-color: #CCE8FF !important;
+      outline: 1px solid #99D1FF;
+    }
+
+    /* Classic Windows [+] / [-] Tree Box */
+    .tree-box {
+      width: 11px;
+      height: 11px;
+      border: 1px solid #808080;
+      background-color: #FFFFFF;
+      color: #000000;
+      font-family: 'Consolas', monospace;
+      font-size: 10px;
+      line-height: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Classic Windows GroupBox (Fieldset) */
+    .win-groupbox {
+      border: 1px solid #BFBFBF;
+      background-color: #F7F7F7;
+      padding: 10px 12px 12px 12px;
+      position: relative;
+    }
+    .win-groupbox-title {
+      position: absolute;
+      top: -8px;
+      left: 10px;
+      background-color: #F7F7F7;
+      padding: 0 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #003399;
+    }
+
+    /* Windows Scrollbars */
+    ::-webkit-scrollbar {
+      width: 14px;
+      height: 14px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F0F0F0;
+      border-left: 1px solid #DCDCDC;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CDCDCD;
+      border: 2px solid #F0F0F0;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #A6A6A6;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col p-1 sm:p-2 overflow-x-hidden">
+
+  <!-- Windows System Notification Toast (Replaces alert()) -->
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden max-w-md">
+    <div class="win-window p-0.5">
+      <div class="bg-[#0054E3] text-white px-2.5 py-1 text-[11px] font-bold flex items-center justify-between">
+        <span>Active Directory Domain Services</span>
+        <button onclick="hideToast()" class="text-white hover:bg-red-600 px-1">×</button>
+      </div>
+      <div class="bg-[#F0F0F0] p-3 flex items-start gap-2.5 text-xs text-black">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-[#0054E3] text-base mt-0.5"></i>
+        <div id="toastMessage" class="leading-snug">Operation completed successfully.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main MMC 3.0 Window Frame -->
+  <div class="win-window flex-1 flex flex-col overflow-hidden">
+
+    <!-- Classic Windows Title Bar -->
+    <header class="bg-gradient-to-r from-[#0A246A] via-[#245EDC] to-[#3B77BC] text-white px-2.5 py-1 flex items-center justify-between">
+      <div class="flex items-center gap-2 min-w-0">
+        <!-- Classic ADUC Icon -->
+        <span class="w-4 h-4 bg-amber-300 border border-amber-700 rounded-[2px] flex items-center justify-center text-[#0A246A] text-[10px] shrink-0">
+          <i class="fa-solid fa-sitemap"></i>
+        </span>
+        <span class="text-xs font-bold tracking-normal truncate">
+          Active Directory Users and Computers - [eaglebusiness.local]
+        </span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="hidden sm:inline text-[11px] bg-black/25 px-2 py-0.5 border border-white/25 font-mono-win">
+          DC01.eaglebusiness.local | Audit Date: 2026-11-14
+        </span>
+        <!-- Classic Windows Caption Buttons -->
+        <div class="flex items-center gap-0.5">
+          <button onclick="showToast('MMC Console Window Minimized to Taskbar.', 'info')" class="w-5 h-5 bg-[#E1E1E1] text-black border border-white border-r-[#404040] border-b-[#404040] text-[10px] font-bold flex items-center justify-center hover:bg-white" title="Minimize">_</button>
+          <button onclick="showToast('MMC Console Window Maximized.', 'info')" class="w-5 h-5 bg-[#E1E1E1] text-black border border-white border-r-[#404040] border-b-[#404040] text-[10px] font-bold flex items-center justify-center hover:bg-white" title="Maximize">□</button>
+          <button onclick="showToast('Cannot close Active Directory Users and Computers while governance audit is active.', 'info')" class="w-5 h-5 bg-[#D9534F] text-white border border-white border-r-[#404040] border-b-[#404040] text-[11px] font-bold flex items-center justify-center hover:bg-red-600" title="Close">×</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Classic MMC Menu Bar (File | Action | View | Help) -->
+    <nav class="bg-[#F0F0F0] border-b border-[#ACA899] px-2 py-0.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+      <div class="flex items-center gap-1">
+        <button onclick="openPowerShellModal()" class="px-2 py-0.5 hover:bg-[#316AC5] hover:text-white"><u>F</u>ile</button>
+        <button onclick="openCreateUserModal()" class="px-2 py-0.5 hover:bg-[#316AC5] hover:text-white"><u>A</u>ction</button>
+        <button onclick="toggleConsoleTree()" class="px-2 py-0.5 hover:bg-[#316AC5] hover:text-white"><u>V</u>iew</button>
+        <button onclick="showToast('Active Directory Users and Computers (MMC 3.0) — PriVis Least-Privilege Governance Snap-in for Eagle Business Solutions.', 'info')" class="px-2 py-0.5 hover:bg-[#316AC5] hover:text-white"><u>H</u>elp</button>
+      </div>
+
+      <!-- Department OU Color Legend -->
+      <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+        <span class="text-slate-600 font-semibold">Department OUs:</span>
+        <button onclick="selectNode('ou-support')" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-[#ACA899] hover:border-[#0D9488] text-black" title="Open Customer Support OU">
+          <span class="w-2.5 h-2.5 inline-block" style="background-color:#0D9488;"></span> Customer Support
+        </button>
+        <button onclick="selectNode('ou-it')" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-[#ACA899] hover:border-[#2563EB] text-black" title="Open IT OU">
+          <span class="w-2.5 h-2.5 inline-block" style="background-color:#2563EB;"></span> IT
+        </button>
+        <button onclick="selectNode('ou-sales')" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-[#ACA899] hover:border-[#D97706] text-black" title="Open Sales OU">
+          <span class="w-2.5 h-2.5 inline-block" style="background-color:#D97706;"></span> Sales
+        </button>
+        <button onclick="selectNode('ou-finance')" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-[#ACA899] hover:border-[#059669] text-black" title="Open Finance OU">
+          <span class="w-2.5 h-2.5 inline-block" style="background-color:#059669;"></span> Finance
+        </button>
+        <button onclick="selectNode('ou-hr')" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-[#ACA899] hover:border-[#7C3AED] text-black" title="Open HR OU">
+          <span class="w-2.5 h-2.5 inline-block" style="background-color:#7C3AED;"></span> HR
+        </button>
+        <button onclick="selectNode('ou-groups')" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-[#ACA899] hover:border-[#475569] text-black" title="Open Security Groups OU">
+          <span class="w-2.5 h-2.5 inline-block" style="background-color:#475569;"></span> Security Groups
+        </button>
+      </div>
+    </nav>
+
+    <!-- Classic MMC Standard Toolbar -->
+    <div class="bg-[#F0F0F0] border-b border-[#ACA899] px-2 py-1 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1">
+        <button onclick="navigateBack()" id="btnBack" class="mmc-tool-btn" title="Back">
+          <i class="fa-solid fa-arrow-left text-[#0054E3]"></i>
+        </button>
+        <button onclick="navigateUp()" id="btnUp" class="mmc-tool-btn" title="Up One Level">
+          <i class="fa-solid fa-folder-arrow-up text-amber-600"></i>
+          <i class="fa-solid fa-turn-up text-amber-700"></i>
+        </button>
+        <button onclick="toggleConsoleTree()" class="mmc-tool-btn" title="Show/Hide Console Tree">
+          <i class="fa-solid fa-table-columns text-slate-700"></i>
+          <span class="hidden md:inline">Console Tree</span>
+        </button>
+
+        <span class="h-4 w-[1px] bg-[#ACA899] mx-1"></span>
+
+        <button onclick="openSelectedProperties()" class="mmc-tool-btn" title="Properties of Selected Object">
+          <i class="fa-solid fa-file-lines text-[#0054E3]"></i>
+          <span class="hidden sm:inline">Properties</span>
+        </button>
+        <button onclick="openCreateUserModal()" class="mmc-tool-btn" title="Create a new user in the current container">
+          <i class="fa-solid fa-user-plus text-amber-600"></i>
+          <span class="hidden sm:inline">New User</span>
+        </button>
+        <button onclick="openPowerShellModal()" class="mmc-tool-btn" title="Export Active Directory PowerShell Setup Script">
+          <i class="fa-solid fa-terminal text-slate-800"></i>
+          <span class="hidden md:inline">PowerShell Script</span>
+        </button>
+
+        <span class="h-4 w-[1px] bg-[#ACA899] mx-1"></span>
+
+        <button onclick="resetDemoState()" class="mmc-tool-btn" title="Restore original HTN Eagle Business Solutions dataset">
+          <i class="fa-solid fa-rotate-left text-slate-700"></i>
+          <span class="hidden lg:inline">Reset Audit Data</span>
+        </button>
+      </div>
+
+      <!-- Classic Windows Search / Filter Box -->
+      <div class="flex items-center gap-1.5">
+        <label for="searchInput" class="text-[11px] text-slate-700 font-semibold">Find:</label>
+        <div class="relative">
+          <input id="searchInput" type="text" oninput="renderMainPane()" placeholder="Name, SAM, group, risk..." class="win-sunken px-2 py-0.5 text-[11px] w-44 sm:w-56 focus:outline-none" />
+          <button onclick="clearSearch()" class="absolute right-1.5 top-0.5 text-slate-400 hover:text-black text-[11px]" title="Clear filter">×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address / Distinguished Name Bar -->
+    <div class="bg-[#F0F0F0] border-b border-[#ACA899] px-2 py-1 flex items-center justify-between gap-2 text-[11px]">
+      <div class="flex items-center gap-1.5 min-w-0 flex-1">
+        <span class="text-slate-600 font-semibold shrink-0">Address:</span>
+        <div id="breadcrumbBar" class="win-sunken px-2 py-0.5 flex-1 flex items-center gap-1 overflow-x-auto whitespace-nowrap"></div>
+      </div>
+      <div id="dnLabel" class="hidden xl:block font-mono-win text-[11px] text-slate-700 bg-white border border-[#ACA899] px-2 py-0.5 shrink-0">
+        OU=Eagle Business Solutions,DC=eaglebusiness,DC=local
+      </div>
+    </div>
+
+    <!-- Main MMC Split Pane Workspace -->
+    <div class="flex-1 flex flex-col lg:flex-row min-h-[580px] overflow-hidden">
+
+      <!-- Left Pane: Classic MMC Console Tree -->
+      <aside id="consoleTreePane" class="w-full lg:w-64 xl:w-72 bg-white border-b lg:border-b-0 lg:border-r-2 border-[#ACA899] flex flex-col shrink-0">
+        <div class="bg-[#E8E8E8] border-b border-[#ACA899] px-2 py-1 text-[11px] font-semibold text-slate-800 flex items-center justify-between">
+          <span>Console Root</span>
+          <span class="text-[10px] text-slate-500 font-normal">ADUC Snap-in</span>
+        </div>
+        <div id="consoleTree" class="p-1.5 overflow-y-auto flex-1 max-h-56 lg:max-h-none">
+          <!-- Rendered by JS -->
+        </div>
+      </aside>
+
+      <!-- Right Pane: Classic ADUC Directory List + Container Summary & Solutions Box -->
+      <main class="flex-1 bg-white flex flex-col min-w-0 overflow-hidden">
+
+        <!-- Department / Container Header Bar -->
+        <div id="containerHeaderBar" class="bg-[#F0F0F0] border-b border-[#ACA899] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span id="headerDeptSwatch" class="w-3.5 h-3.5 border border-black/30 shrink-0" style="background-color:#2563EB;"></span>
+            <h1 id="headerTitle" class="text-xs font-bold text-black truncate">Eagle Business Solutions</h1>
+            <span id="headerObjectCount" class="text-[11px] text-slate-600">(0 objects)</span>
+          </div>
+          <div class="flex items-center gap-2 text-[11px]">
+            <span id="headerDeptTag" class="px-2 py-0.5 font-semibold border text-[11px]">All Departments</span>
+          </div>
+        </div>
+
+        <!-- Upper Section: Classic ADUC Multi-Column Details List -->
+        <div class="flex-1 overflow-auto border-b-2 border-[#ACA899] min-h-[240px]">
+          <table class="w-full border-collapse">
+            <thead class="sticky top-0 z-10">
+              <tr>
+                <th class="aduc-th">Name</th>
+                <th class="aduc-th">Type</th>
+                <th class="aduc-th">SAM Account</th>
+                <th class="aduc-th">Department OU</th>
+                <th class="aduc-th">Role / Scope</th>
+                <th class="aduc-th">Status</th>
+                <th class="aduc-th">PriVis Risk</th>
+                <th class="aduc-th">Group Memberships</th>
+              </tr>
+            </thead>
+            <tbody id="aducTableBody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Lower Section: CONTAINER SUMMARY (with dedicated SOLUTIONS box for each at-risk item) -->
+        <section id="containerSummarySection" class="bg-[#F0F0F0] p-3 overflow-y-auto max-h-[340px] shrink-0">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-check text-[#003399]"></i>
+              <h2 class="text-xs font-bold text-[#003399] uppercase tracking-wide">
+                Container Summary — <span id="summaryContainerName">Eagle Business Solutions</span>
+              </h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btnApplyAllSolutions" onclick="applyAllContainerSolutions()" class="win-btn px-2.5 py-1 text-[11px] font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-wrench text-[#0054E3]"></i>
+                <span>Apply All Solutions in Container</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-12 gap-3">
+            <!-- Left 4 Columns: Container Metrics & Selected Object Quick Details -->
+            <div class="xl:col-span-4 space-y-2.5">
+              <!-- Container Metrics GroupBox -->
+              <div class="win-groupbox">
+                <span class="win-groupbox-title">Container Statistics</span>
+                <div id="containerStatsGrid" class="grid grid-cols-3 gap-2 pt-1 text-center">
+                  <!-- Populated by JS -->
+                </div>
+                <div id="containerPolicyNote" class="mt-2 pt-2 border-t border-slate-300 text-[11px] text-slate-700 leading-snug">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+
+              <!-- Selected AD Object Quick Inspector GroupBox -->
+              <div class="win-groupbox">
+                <span class="win-groupbox-title">Selected Object</span>
+                <div id="selectedObjectQuickBox" class="pt-1 text-[11px] text-slate-800 space-y-1">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Right 8 Columns: Dedicated "SOLUTIONS" Box for Every At-Risk Item -->
+            <div class="xl:col-span-8">
+              <div class="win-groupbox h-full flex flex-col">
+                <span class="win-groupbox-title flex items-center gap-1.5">
+                  <i class="fa-solid fa-shield-halved text-red-700"></i>
+                  <span>Solutions (Least-Privilege Remediation Plan)</span>
+                </span>
+                <div id="solutionsBoxContent" class="pt-1.5 space-y-2 flex-1 overflow-y-auto">
+                  <!-- Populated dynamically with an explicit solution card for each at-risk account -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Classic Windows Status Bar -->
+    <footer class="bg-[#F0F0F0] border-t border-[#ACA899] px-2.5 py-1 flex flex-wrap items-center justify-between text-[11px] text-slate-800 gap-2">
+      <div class="flex items-center gap-3">
+        <span id="statusLeft" class="win-sunken px-2 py-0.5">12 User(s), 8 Security Group(s), 6 Organizational Unit(s)</span>
+        <span id="statusRisk" class="win-sunken px-2 py-0.5 font-semibold">4 At-Risk Accounts Detected</span>
+      </div>
+      <div class="win-sunken px-2 py-0.5 text-slate-600">
+        Tip: Double-click any user or group to open its Windows Properties dialog
+      </div>
+    </footer>
+  </div>
+
+  <!-- Classic Windows ADUC Properties Dialog Modal -->
+  <div id="propertiesModal" class="fixed inset-0 bg-black/45 z-40 hidden items-center justify-center p-2">
+    <div class="win-window w-full max-w-lg flex flex-col max-h-[90vh]">
+      <!-- Dialog Title Bar -->
+      <div class="bg-gradient-to-r from-[#0A246A] to-[#3B77BC] text-white px-2.5 py-1 flex items-center justify-between">
+        <span id="propDialogTitle" class="text-xs font-bold">Properties</span>
+        <button onclick="closePropertiesModal()" class="w-5 h-5 bg-[#D9534F] text-white border border-white border-r-[#404040] border-b-[#404040] text-xs font-bold flex items-center justify-center">×</button>
+      </div>
+
+      <!-- Classic Windows Property Tabs -->
+      <div class="bg-[#F0F0F0] px-3 pt-2.5 flex items-end gap-0.5 border-b border-[#808080]" id="propTabsRow">
+        <button onclick="switchPropTab('general')" data-tab="general" class="prop-tab px-3 py-1 text-[11px] bg-white border-t border-l border-r border-[#808080] font-semibold -mb-[1px]">General</button>
+        <button onclick="switchPropTab('account')" data-tab="account" class="prop-tab px-3 py-1 text-[11px] bg-[#E1E1E1] border-t border-l border-r border-[#ACA899] text-slate-700">Account</button>
+        <button onclick="switchPropTab('memberof')" data-tab="memberof" class="prop-tab px-3 py-1 text-[11px] bg-[#E1E1E1] border-t border-l border-r border-[#ACA899] text-slate-700">Member Of</button>
+        <button onclick="switchPropTab('privis')" data-tab="privis" class="prop-tab px-3 py-1 text-[11px] bg-[#E1E1E1] border-t border-l border-r border-[#ACA899] text-slate-700">PriVis Audit & Solution</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="propDialogBody" class="p-4 bg-white overflow-y-auto flex-1 text-xs space-y-3">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Dialog Footer Buttons -->
+      <div class="bg-[#F0F0F0] px-3 py-2 border-t border-[#ACA899] flex justify-end gap-2">
+        <button onclick="closePropertiesModal()" class="win-btn px-5 py-1 text-xs font-semibold">OK</button>
+        <button onclick="closePropertiesModal()" class="win-btn px-5 py-1 text-xs">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create New User Modal -->
+  <div id="createUserModal" class="fixed inset-0 bg-black/45 z-40 hidden items-center justify-center p-2">
+    <div class="win-window w-full max-w-md">
+      <div class="bg-gradient-to-r from-[#0A246A] to-[#3B77BC] text-white px-2.5 py-1 flex items-center justify-between">
+        <span class="text-xs font-bold">New Object - User</span>
+        <button onclick="closeCreateUserModal()" class="w-5 h-5 bg-[#D9534F] text-white border border-white border-r-[#404040] border-b-[#404040] text-xs font-bold flex items-center justify-center">×</button>
+      </div>
+      <form onsubmit="handleCreateUser(event)" class="p-4 bg-[#F0F0F0] space-y-3 text-xs">
+        <div class="flex items-center gap-2.5 pb-2 border-b border-[#ACA899]">
+          <i class="fa-solid fa-user-plus text-2xl text-[#0054E3]"></i>
+          <div>
+            <div class="font-bold">Create in: eaglebusiness.local</div>
+            <div class="text-[11px] text-slate-600">Provision a new employee or contractor account into a departmental OU.</div>
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Full name:</label>
+          <input id="newFullName" type="text" required placeholder="e.g., Jordan Taylor" class="win-sunken w-full px-2 py-1 text-xs" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-semibold mb-1">User logon name (SAM):</label>
+            <input id="newSam" type="text" required placeholder="e.g., jtaylor" class="win-sunken w-full px-2 py-1 text-xs font-mono-win" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Department OU:</label>
+            <select id="newDept" class="win-sunken w-full px-2 py-1 text-xs">
+              <option value="Customer Support">Customer Support</option>
+              <option value="IT">IT</option>
+              <option value="Sales">Sales</option>
+              <option value="Finance">Finance</option>
+              <option value="HR">HR</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-semibold mb-1">Job Role:</label>
+            <input id="newRole" type="text" required placeholder="e.g., Support Rep" class="win-sunken w-full px-2 py-1 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Worker Type:</label>
+            <select id="newWorkerType" class="win-sunken w-full px-2 py-1 text-xs">
+              <option value="Full-Time">Full-Time</option>
+              <option value="Part-Time">Part-Time</option>
+              <option value="Contractor">Contractor</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-[#ACA899]">
+          <button type="submit" class="win-btn px-4 py-1 font-semibold">Finish</button>
+          <button type="button" onclick="closeCreateUserModal()" class="win-btn px-4 py-1">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PowerShell Export Modal -->
+  <div id="powershellModal" class="fixed inset-0 bg-black/45 z-40 hidden items-center justify-center p-2">
+    <div class="win-window w-full max-w-3xl flex flex-col max-h-[88vh]">
+      <div class="bg-gradient-to-r from-[#0A246A] to-[#3B77BC] text-white px-2.5 py-1 flex items-center justify-between">
+        <span class="text-xs font-bold">Windows PowerShell — Active Directory Deployment & Remediation Script</span>
+        <button onclick="closePowerShellModal()" class="w-5 h-5 bg-[#D9534F] text-white border border-white border-r-[#404040] border-b-[#404040] text-xs font-bold flex items-center justify-center">×</button>
+      </div>
+      <div class="p-3 bg-[#F0F0F0] flex-1 overflow-y-auto space-y-2">
+        <p class="text-[11px] text-slate-800">
+          Execute this script on <strong>DC01.eaglebusiness.local</strong> to create the Organizational Units, Security Groups, User accounts, and apply current PriVis remediations:
+        </p>
+        <pre id="psScriptContent" class="win-sunken p-3 bg-[#012456] text-white font-mono-win text-[11px] overflow-x-auto leading-relaxed select-all"></pre>
+      </div>
+      <div class="bg-[#F0F0F0] px-3 py-2 border-t border-[#ACA899] flex justify-end gap-2">
+        <button onclick="copyPowerShellScript()" class="win-btn px-3 py-1 text-xs font-semibold">
+          <i class="fa-solid fa-copy mr-1"></i>Copy to Clipboard
+        </button>
+        <button onclick="closePowerShellModal()" class="win-btn px-4 py-1 text-xs">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. DEPARTMENT COLOR PALETTE (Distinct Color per Department OU)
+    // =========================================================================
+    const DEPT_COLORS = {
+      'Customer Support': {
+        hex: '#0D9488',
+        softBg: '#F0FDFA',
+        badgeBg: '#CCFBF1',
+        border: '#5EEAD4',
+        text: '#115E59',
+        icon: 'fa-headset'
+      },
+      'IT': {
+        hex: '#2563EB',
+        softBg: '#EFF6FF',
+        badgeBg: '#DBEAFE',
+        border: '#93C5FD',
+        text: '#1E40AF',
+        icon: 'fa-server'
+      },
+      'Sales': {
+        hex: '#D97706',
+        softBg: '#FFFBEB',
+        badgeBg: '#FEF3C7',
+        border: '#FCD34D',
+        text: '#92400E',
+        icon: 'fa-chart-line'
+      },
+      'Finance': {
+        hex: '#059669',
+        softBg: '#ECFDF5',
+        badgeBg: '#D1FAE5',
+        border: '#6EE7B7',
+        text: '#065F46',
+        icon: 'fa-coins'
+      },
+      'HR': {
+        hex: '#7C3AED',
+        softBg: '#F5F3FF',
+        badgeBg: '#EDE9FE',
+        border: '#C4B5FD',
+        text: '#5B21B6',
+        icon: 'fa-users-gear'
+      },
+      'Security Groups': {
+        hex: '#475569',
+        softBg: '#F8FAFC',
+        badgeBg: '#E2E8F0',
+        border: '#CBD5E1',
+        text: '#1E293B',
+        icon: 'fa-shield-halved'
+      }
+    };
+
+    const AUDIT_DATE = '2026-11-14';
+
+    // =========================================================================
+    // 2. EXACT EAGLE BUSINESS SOLUTIONS DATASET (8 Groups & 12 Users)
+    // =========================================================================
+    const SECURITY_GROUPS = [
+      { id: 'G001', name: 'Customer-Support', risk: 'Low', resource: 'CRM - customer records', description: 'Read and update routine customer support tickets' },
+      { id: 'G002', name: 'Payroll-Editors', risk: 'High', resource: 'Payroll application', description: 'Edit payroll records and payroll adjustments' },
+      { id: 'G003', name: 'Server-Admins', risk: 'Critical', resource: 'Server administration', description: 'Privileged access to managed company servers' },
+      { id: 'G004', name: 'Sales-Reports', risk: 'Low', resource: 'Sales reporting portal', description: 'Read and create standard sales reports' },
+      { id: 'G005', name: 'Finance-Reports', risk: 'Medium', resource: 'Financial reporting portal', description: 'Read internal financial reports' },
+      { id: 'G006', name: 'HR-Records', risk: 'High', resource: 'HR records application', description: 'View and update confidential employee records' },
+      { id: 'G007', name: 'Helpdesk-Reset', risk: 'High', resource: 'IT service desk', description: 'Reset company account credentials within approved scope' },
+      { id: 'G008', name: 'All-Employees', risk: 'Low', resource: 'Company intranet', description: 'Read internal general company resources' }
+    ];
+
+    function getInitialUsers() {
+      return [
+        {
+          empId: 'U001',
+          name: 'Maya Torres',
+          sam: 'mtorres',
+          department: 'Customer Support',
+          role: 'Support Rep',
+          workerType: 'Part-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G001', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G002', policy: 'Denied', approvalStatus: 'Denied', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U002',
+          name: 'Alex Chen',
+          sam: 'achen',
+          department: 'IT',
+          role: 'IT Admin',
+          workerType: 'Full-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G003', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G007', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U003',
+          name: 'Taylor Morgan',
+          sam: 'tmorgan',
+          department: 'IT',
+          role: 'IT Contractor',
+          workerType: 'Contractor',
+          enabled: true,
+          endDate: '2026-11-01',
+          memberships: [
+            { groupId: 'G003', policy: 'Approval Required', approvalStatus: 'Missing', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Conditional', approvalStatus: 'Expired', ticket: null, expires: '2026-11-01' }
+          ]
+        },
+        {
+          empId: 'U004',
+          name: 'Jordan Lee',
+          sam: 'jlee',
+          department: 'Customer Support',
+          role: 'Support Rep',
+          workerType: 'Part-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G001', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U005',
+          name: 'Sam Patel',
+          sam: 'spatel',
+          department: 'Sales',
+          role: 'Sales Rep',
+          workerType: 'Full-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G004', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G005', policy: 'Denied', approvalStatus: 'Denied', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U006',
+          name: 'Chris Rivera',
+          sam: 'crivera',
+          department: 'Finance',
+          role: 'Finance Analyst',
+          workerType: 'Full-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G005', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U007',
+          name: 'Renee Brooks',
+          sam: 'rbrooks',
+          department: 'Finance',
+          role: 'Payroll Specialist',
+          workerType: 'Full-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G002', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G005', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U008',
+          name: 'Avery Kim',
+          sam: 'akim',
+          department: 'Sales',
+          role: 'Sales Manager',
+          workerType: 'Full-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G004', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G005', policy: 'Approval Required', approvalStatus: 'Approved', ticket: 'APR-2026-014', expires: '2026-12-15' },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U009',
+          name: 'Morgan Ellis',
+          sam: 'mellis',
+          department: 'HR',
+          role: 'HR Coordinator',
+          workerType: 'Full-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G006', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U010',
+          name: 'Jamie Price',
+          sam: 'jprice',
+          department: 'IT',
+          role: 'IT Support',
+          workerType: 'Full-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G007', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U011',
+          name: 'Casey Nguyen',
+          sam: 'cnguyen',
+          department: 'Finance',
+          role: 'Finance Manager',
+          workerType: 'Full-Time',
+          enabled: true,
+          endDate: null,
+          memberships: [
+            { groupId: 'G002', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G005', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+            { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+          ]
+        },
+        {
+          empId: 'U012',
+          name: 'Devon Reed',
+          sam: 'dreed',
+          department: 'Sales',
+          role: 'Sales Rep',
+          workerType: 'Former Employee',
+          enabled: false,
+          endDate: '2026-09-30',
+          memberships: [
+            { groupId: 'G004', policy: 'Stale', approvalStatus: 'Orphaned', ticket: null, expires: '2026-09-30' },
+            { groupId: 'G008', policy: 'Stale', approvalStatus: 'Orphaned', ticket: null, expires: '2026-09-30' }
+          ]
+        }
+      ];
+    }
+
+    let USERS = getInitialUsers();
+
+    // =========================================================================
+    // 3. MMC CONSOLE TREE STRUCTURE & STATE
+    // =========================================================================
+    const TREE_NODES = [
+      { id: 'domain', label: 'eaglebusiness.local', parent: null, type: 'domain', dn: 'DC=eaglebusiness,DC=local' },
+      { id: 'builtin', label: 'Builtin', parent: 'domain', type: 'container', dn: 'CN=Builtin,DC=eaglebusiness,DC=local' },
+      { id: 'computers', label: 'Computers', parent: 'domain', type: 'container', dn: 'CN=Computers,DC=eaglebusiness,DC=local' },
+      { id: 'dc', label: 'Domain Controllers', parent: 'domain', type: 'ou', dn: 'OU=Domain Controllers,DC=eaglebusiness,DC=local' },
+      { id: 'company', label: 'Eagle Business Solutions', parent: 'domain', type: 'ou', dn: 'OU=Eagle Business Solutions,DC=eaglebusiness,DC=local' },
+      { id: 'ou-support', label: 'Customer Support', dept: 'Customer Support', parent: 'company', type: 'ou', dn: 'OU=Customer Support,OU=Eagle Business Solutions,DC=eaglebusiness,DC=local' },
+      { id: 'ou-it', label: 'IT', dept: 'IT', parent: 'company', type: 'ou', dn: 'OU=IT,OU=Eagle Business Solutions,DC=eaglebusiness,DC=local' },
+      { id: 'ou-sales', label: 'Sales', dept: 'Sales', parent: 'company', type: 'ou', dn: 'OU=Sales,OU=Eagle Business Solutions,DC=eaglebusiness,DC=local' },
+      { id: 'ou-finance', label: 'Finance', dept: 'Finance', parent: 'company', type: 'ou', dn: 'OU=Finance,OU=Eagle Business Solutions,DC=eaglebusiness,DC=local' },
+      { id: 'ou-hr', label: 'HR', dept: 'HR', parent: 'company', type: 'ou', dn: 'OU=HR,OU=Eagle Business Solutions,DC=eaglebusiness,DC=local' },
+      { id: 'ou-groups', label: 'Security Groups', dept: 'Security Groups', parent: 'company', type: 'ou', dn: 'OU=Security Groups,OU=Eagle Business Solutions,DC=eaglebusiness,DC=local' },
+      { id: 'users-default', label: 'Users', parent: 'domain', type: 'container', dn: 'CN=Users,DC=eaglebusiness,DC=local' }
+    ];
+
+    let state = {
+      selectedNodeId: 'company',
+      history: [],
+      expanded: { domain: true, company: true },
+      selectedObject: { kind: 'ou', id: 'company' },
+      showTree: true,
+      activePropTab: 'general'
+    };
+
+    // =========================================================================
+    // 4. PRIVIS RISK & SOLUTION EVALUATION ENGINE
+    // =========================================================================
+    function evaluateUserRisk(user) {
+      const isExpired = user.endDate && user.endDate < AUDIT_DATE;
+      const issues = [];
+
+      if (isExpired && user.enabled) {
+        issues.push({
+          type: 'EXPIRED_ACCOUNT',
+          severity: 'Critical',
+          label: `Contract ended ${user.endDate} (still Enabled)`
+        });
+      }
+
+      user.memberships.forEach(m => {
+        const grp = SECURITY_GROUPS.find(g => g.id === m.groupId);
+        if (!grp) return;
+
+        if (m.policy === 'Denied' || m.approvalStatus === 'Denied') {
+          issues.push({
+            type: 'DENIED_GROUP',
+            severity: grp.risk === 'High' ? 'High' : 'Medium',
+            groupId: grp.id,
+            groupName: grp.name,
+            label: `Denied group ${grp.name} (${grp.id})`
+          });
+        } else if (m.policy === 'Approval Required' && m.approvalStatus !== 'Approved') {
+          issues.push({
+            type: 'MISSING_APPROVAL',
+            severity: 'Critical',
+            groupId: grp.id,
+            groupName: grp.name,
+            label: `Unapproved ${grp.name} (${grp.id}) — Approval ${m.approvalStatus}`
+          });
+        } else if (isExpired && user.enabled && m.groupId === 'G008') {
+          issues.push({
+            type: 'EXPIRED_GROUP',
+            severity: 'Medium',
+            groupId: grp.id,
+            groupName: grp.name,
+            label: `Expired contractor still in ${grp.name} (${grp.id})`
+          });
+        } else if (!user.enabled) {
+          issues.push({
+            type: 'ORPHANED_GROUP',
+            severity: 'Low',
+            groupId: grp.id,
+            groupName: grp.name,
+            label: `Orphaned ${grp.name} (${grp.id}) on disabled account`
+          });
+        }
+      });
+
+      const approvedExc = user.memberships.find(m => m.policy === 'Approval Required' && m.approvalStatus === 'Approved');
+
+      if (issues.length === 0) {
+        return {
+          atRisk: false,
+          severity: approvedExc ? 'Exception' : 'Compliant',
+          statusText: approvedExc ? `Compliant (Exception ${approvedExc.ticket})` : 'Compliant',
+          issues: [],
+          exception: approvedExc || null,
+          solutionSummary: null,
+          solutionSteps: []
+        };
+      }
+
+      const rank = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+      issues.sort((a, b) => rank[b.severity] - rank[a.severity]);
+      const highest = issues[0].severity;
+
+      // Build explicit, tailored remediation solution for this at-risk user
+      let solutionSummary = '';
+      let solutionSteps = [];
+
+      if (user.empId === 'U003' || (isExpired && user.enabled)) {
+        solutionSummary = `Disable expired contractor account '${user.sam}', revoke privileged Server-Admins (G003) & All-Employees (G008), and audit server logs since ${user.endDate}.`;
+        solutionSteps = [
+          `Set AD account '${user.sam}' to Disabled immediately (contract ended ${user.endDate}).`,
+          `Remove '${user.sam}' from Server-Admins (G003) and All-Employees (G008).`,
+          `Review Windows Security Event Logs on managed servers for activity after ${user.endDate}.`
+        ];
+      } else if (user.empId === 'U001') {
+        solutionSummary = `Revoke Payroll-Editors (G002) from Support Rep '${user.sam}' and audit payroll application logs for unauthorized changes.`;
+        solutionSteps = [
+          `Remove '${user.sam}' from Payroll-Editors (G002) — Support Reps are explicitly denied payroll edit access.`,
+          `Retain Customer-Support (G001) and All-Employees (G008) for routine support duties.`,
+          `Inspect Payroll application audit trail for any modifications made by '${user.sam}'.`
+        ];
+      } else if (user.empId === 'U005') {
+        solutionSummary = `Revoke Finance-Reports (G005) from Sales Rep '${user.sam}' to enforce departmental segregation of duties.`;
+        solutionSteps = [
+          `Remove '${user.sam}' from Finance-Reports (G005) — Sales Reps are prohibited from viewing internal financial reports.`,
+          `Retain Sales-Reports (G004) and All-Employees (G008).`,
+          `Verify Financial Reporting Portal access logs for '${user.sam}'.`
+        ];
+      } else if (!user.enabled) {
+        const grpNames = issues.map(i => `${i.groupName} (${i.groupId})`).join(' and ');
+        solutionSummary = `Strip orphaned memberships (${grpNames}) from disabled former employee '${user.sam}' to complete offboarding hygiene.`;
+        solutionSteps = [
+          `Remove '${user.sam}' from ${grpNames} (account disabled since ${user.endDate || 'offboarding'}).`,
+          `Confirm account remains Disabled and move object to a dedicated Disabled Accounts container.`
+        ];
+      } else {
+        const grpNames = issues.filter(i => i.groupName).map(i => `${i.groupName} (${i.groupId})`).join(', ');
+        solutionSummary = `Revoke unauthorized group membership(s) ${grpNames} from '${user.sam}' to align with role policy.`;
+        solutionSteps = [
+          `Remove '${user.sam}' from ${grpNames}.`,
+          `Require an approved change ticket before granting elevated privileges.`
+        ];
+      }
+
+      return {
+        atRisk: true,
+        severity: highest,
+        statusText: highest === 'Low' ? 'Low Risk (Orphaned)' : `${highest} Risk`,
+        issues,
+        exception: approvedExc || null,
+        solutionSummary,
+        solutionSteps
+      };
+    }
+
+    // =========================================================================
+    // 5. NAVIGATION & INTERACTION ACTIONS
+    // =========================================================================
+    function selectNode(nodeId, recordHistory = true) {
+      if (recordHistory && state.selectedNodeId !== nodeId) {
+        state.history.push(state.selectedNodeId);
+      }
+      state.selectedNodeId = nodeId;
+      let curr = TREE_NODES.find(n => n.id === nodeId);
+      while (curr && curr.parent) {
+        state.expanded[curr.parent] = true;
+        curr = TREE_NODES.find(n => n.id === curr.parent);
+      }
+      state.selectedObject = { kind: 'ou', id: nodeId };
+      renderAll();
+    }
+
+    function toggleExpand(nodeId, e) {
+      if (e) e.stopPropagation();
+      state.expanded[nodeId] = !state.expanded[nodeId];
+      renderTree();
+    }
+
+    function navigateBack() {
+      if (state.history.length === 0) return;
+      selectNode(state.history.pop(), false);
+    }
+
+    function navigateUp() {
+      const curr = TREE_NODES.find(n => n.id === state.selectedNodeId);
+      if (curr && curr.parent) {
+        selectNode(curr.parent, true);
+      }
+    }
+
+    function toggleConsoleTree() {
+      state.showTree = !state.showTree;
+      const pane = document.getElementById('consoleTreePane');
+      if (state.showTree) {
+        pane.classList.remove('hidden');
+      } else {
+        pane.classList.add('hidden');
+      }
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      renderMainPane();
+    }
+
+    // Apply Solution to a single at-risk user
+    function applySolutionForUser(empId) {
+      const user = USERS.find(u => u.empId === empId);
+      if (!user) return;
+      const evalRes = evaluateUserRisk(user);
+      if (!evalRes.atRisk) return;
+
+      const isExpired = user.endDate && user.endDate < AUDIT_DATE;
+      if (isExpired && user.enabled) {
+        user.enabled = false;
+      }
+
+      const badGroupIds = evalRes.issues.filter(i => i.groupId).map(i => i.groupId);
+      if (badGroupIds.length > 0) {
+        user.memberships = user.memberships.filter(m => !badGroupIds.includes(m.groupId));
+      }
+
+      showToast(`Applied Solution for ${user.name} (${user.sam}): Account status and group memberships now comply with PriVis policy.`, 'info');
+      renderAll();
+      if (!document.getElementById('propertiesModal').classList.contains('hidden')) {
+        openPropertiesModal(state.selectedObject);
+      }
+    }
+
+    // Apply All Solutions in the currently viewed Container
+    function applyAllContainerSolutions() {
+      const scopeUsers = getUsersInCurrentContainer();
+      let fixed = 0;
+      scopeUsers.forEach(u => {
+        const res = evaluateUserRisk(u);
+        if (res.atRisk) {
+          fixed++;
+          const isExpired = u.endDate && u.endDate < AUDIT_DATE;
+          if (isExpired && u.enabled) u.enabled = false;
+          const badIds = res.issues.filter(i => i.groupId).map(i => i.groupId);
+          u.memberships = u.memberships.filter(m => !badIds.includes(m.groupId));
+        }
+      });
+
+      if (fixed === 0) {
+        showToast('No at-risk items remain in this container.', 'info');
+      } else {
+        showToast(`Applied solutions for ${fixed} at-risk account(s) in this container.`, 'info');
+      }
+      renderAll();
+    }
+
+    function revokeSingleGroup(empId, groupId) {
+      const user = USERS.find(u => u.empId === empId);
+      const grp = SECURITY_GROUPS.find(g => g.id === groupId);
+      if (!user || !grp) return;
+      user.memberships = user.memberships.filter(m => m.groupId !== groupId);
+      showToast(`Removed ${user.name} (${user.sam}) from ${grp.name} (${grp.id}).`, 'info');
+      renderAll();
+      if (!document.getElementById('propertiesModal').classList.contains('hidden')) {
+        openPropertiesModal(state.selectedObject);
+      }
+    }
+
+    function toggleUserEnabled(empId) {
+      const user = USERS.find(u => u.empId === empId);
+      if (!user) return;
+      user.enabled = !user.enabled;
+      showToast(`${user.name} (${user.sam}) is now ${user.enabled ? 'Enabled' : 'Disabled'}.`, 'info');
+      renderAll();
+      if (!document.getElementById('propertiesModal').classList.contains('hidden')) {
+        openPropertiesModal(state.selectedObject);
+      }
+    }
+
+    function resetDemoState() {
+      USERS = getInitialUsers();
+      showToast('Restored original Eagle Business Solutions Active Directory audit dataset.', 'info');
+      renderAll();
+    }
+
+    // =========================================================================
+    // 6. RENDERING: TREE, ADDRESS BAR, ADUC TABLE, CONTAINER SUMMARY & SOLUTIONS
+    // =========================================================================
+    function renderAll() {
+      renderTree();
+      renderAddressBar();
+      renderMainPane();
+      updateStatusBar();
+    }
+
+    function renderTree() {
+      const container = document.getElementById('consoleTree');
+      container.innerHTML = `
+        <div class="flex items-center gap-1.5 py-0.5 px-1 text-[11px] font-semibold text-black">
+          <i class="fa-solid fa-desktop text-[#0054E3]"></i>
+          <span>Console Root</span>
+        </div>
+        <div class="pl-2">
+          <div class="flex items-center gap-1.5 py-0.5 px-1 text-[11px] text-black">
+            <span class="tree-box">-</span>
+            <i class="fa-solid fa-sitemap text-[#0054E3]"></i>
+            <span class="truncate">Active Directory Users and Computers</span>
+          </div>
+          <div class="pl-3 border-l border-dotted border-[#808080] ml-2">
+            ${renderTreeNodes(null)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTreeNodes(parentId) {
+      const children = TREE_NODES.filter(n => n.parent === parentId);
+      if (children.length === 0) return '';
+
+      return children.map(node => {
+        const hasKids = TREE_NODES.some(n => n.parent === node.id);
+        const isExpanded = !!state.expanded[node.id];
+        const isSelected = state.selectedNodeId === node.id;
+        const deptColor = node.dept ? DEPT_COLORS[node.dept] : null;
+
+        // Count at-risk users in this OU
+        let riskCount = 0;
+        if (node.dept && node.dept !== 'Security Groups') {
+          riskCount = USERS.filter(u => u.department === node.dept && evaluateUserRisk(u).atRisk).length;
+        } else if (node.id === 'company' || node.id === 'domain') {
+          riskCount = USERS.filter(u => evaluateUserRisk(u).atRisk).length;
+        }
+
+        let folderIcon = `<i class="fa-solid fa-folder text-amber-500"></i>`;
+        if (node.type === 'domain') {
+          folderIcon = `<i class="fa-solid fa-globe text-[#0054E3]"></i>`;
+        } else if (node.id === 'dc') {
+          folderIcon = `<i class="fa-solid fa-server text-slate-700"></i>`;
+        } else if (node.id === 'company') {
+          folderIcon = `<i class="fa-solid fa-building text-[#0A246A]"></i>`;
+        } else if (deptColor) {
+          folderIcon = `
+            <span class="inline-flex items-center justify-center w-4 h-3.5 rounded-[2px] text-white text-[9px]" style="background-color:${deptColor.hex};" title="${node.dept}">
+              <i class="fa-solid fa-folder"></i>
+            </span>
+          `;
+        }
+
+        return `
+          <div class="py-0.5">
+            <div onclick="selectNode('${node.id}')"
+                 class="flex items-center justify-between px-1 py-0.5 cursor-pointer text-[11px] ${
+                   isSelected ? 'bg-[#316AC5] text-white font-semibold' : 'text-black hover:bg-[#E8F2FC]'
+                 }">
+              <div class="flex items-center gap-1.5 min-w-0">
+                ${
+                  hasKids
+                    ? `<button onclick="toggleExpand('${node.id}', event)" class="tree-box">${isExpanded ? '-' : '+'}</button>`
+                    : `<span class="w-[11px] inline-block shrink-0"></span>`
+                }
+                ${folderIcon}
+                <span class="truncate">${node.label}</span>
+              </div>
+              ${
+                riskCount > 0
+                  ? `<span class="ml-1 px-1 text-[10px] font-bold ${
+                      isSelected ? 'bg-white text-red-700' : 'bg-red-100 text-red-800 border border-red-300'
+                    }">${riskCount}</span>`
+                  : ''
+              }
+            </div>
+            ${
+              hasKids && isExpanded
+                ? `<div class="pl-3.5 border-l border-dotted border-[#808080] ml-2">${renderTreeNodes(node.id)}</div>`
+                : ''
+            }
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAddressBar() {
+      const chain = [];
+      let curr = TREE_NODES.find(n => n.id === state.selectedNodeId);
+      while (curr) {
+        chain.unshift(curr);
+        curr = curr.parent ? TREE_NODES.find(n => n.id === curr.parent) : null;
+      }
+
+      document.getElementById('breadcrumbBar').innerHTML = chain.map((n, i) => `
+        ${i > 0 ? '<span class="text-slate-400">▸</span>' : ''}
+        <button onclick="selectNode('${n.id}')" class="hover:underline ${i === chain.length - 1 ? 'font-bold text-black' : 'text-[#003399]'}">
+          ${n.label}
+        </button>
+      `).join('');
+
+      const active = chain[chain.length - 1];
+      document.getElementById('dnLabel').textContent = active ? active.dn : '';
+      document.getElementById('btnBack').disabled = state.history.length === 0;
+    }
+
+    function getUsersInCurrentContainer() {
+      const node = TREE_NODES.find(n => n.id === state.selectedNodeId);
+      if (!node) return USERS;
+      if (node.dept && node.dept !== 'Security Groups') {
+        return USERS.filter(u => u.department === node.dept);
+      }
+      if (node.id === 'company' || node.id === 'domain') {
+        return USERS;
+      }
+      return [];
+    }
+
+    function getObjectsForCurrentView() {
+      const node = TREE_NODES.find(n => n.id === state.selectedNodeId);
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      let rows = [];
+
+      if (node.id === 'domain') {
+        TREE_NODES.filter(n => n.parent === 'domain').forEach(ou => rows.push({ kind: 'ou', data: ou }));
+      } else if (node.id === 'company') {
+        TREE_NODES.filter(n => n.parent === 'company').forEach(ou => rows.push({ kind: 'ou', data: ou }));
+        USERS.forEach(u => rows.push({ kind: 'user', data: u }));
+      } else if (node.id === 'ou-groups') {
+        SECURITY_GROUPS.forEach(g => rows.push({ kind: 'group', data: g }));
+      } else if (node.dept) {
+        USERS.filter(u => u.department === node.dept).forEach(u => rows.push({ kind: 'user', data: u }));
+      } else if (node.id === 'dc') {
+        rows.push({ kind: 'sys', data: { name: 'DC01', type: 'Domain Controller', sam: 'DC01$', dept: 'IT', role: 'Global Catalog / PDC Emulator', status: 'Online' } });
+      } else if (node.id === 'computers') {
+        rows.push({ kind: 'sys', data: { name: 'EBS-FIN-01', type: 'Computer', sam: 'EBS-FIN-01$', dept: 'Finance', role: 'Windows 11 Enterprise', status: 'Enabled' } });
+        rows.push({ kind: 'sys', data: { name: 'EBS-IT-ADM01', type: 'Computer', sam: 'EBS-IT-ADM01$', dept: 'IT', role: 'Admin Workstation', status: 'Enabled' } });
+      } else {
+        rows.push({ kind: 'sys', data: { name: 'Administrator', type: 'User', sam: 'Administrator', dept: 'Built-in', role: 'Built-in Domain Admin', status: 'Enabled' } });
+        rows.push({ kind: 'sys', data: { name: 'Guest', type: 'User', sam: 'Guest', dept: 'Built-in', role: 'Built-in Guest Account', status: 'Disabled' } });
+      }
+
+      if (q) {
+        rows = rows.filter(r => {
+          if (r.kind === 'user') {
+            const u = r.data;
+            const grpText = u.memberships.map(m => {
+              const g = SECURITY_GROUPS.find(x => x.id === m.groupId);
+              return g ? `${g.id} ${g.name}` : '';
+            }).join(' ');
+            const risk = evaluateUserRisk(u).statusText;
+            return `${u.name} ${u.sam} ${u.empId} ${u.department} ${u.role} ${u.workerType} ${risk} ${grpText}`.toLowerCase().includes(q);
+          }
+          if (r.kind === 'group') {
+            return `${r.data.id} ${r.data.name} ${r.data.risk} ${r.data.resource}`.toLowerCase().includes(q);
+          }
+          if (r.kind === 'ou') {
+            return `${r.data.label} ${r.data.dn}`.toLowerCase().includes(q);
+          }
+          return `${r.data.name} ${r.data.sam} ${r.data.role}`.toLowerCase().includes(q);
+        });
+      }
+
+      return rows;
+    }
+
+    function renderMainPane() {
+      const node = TREE_NODES.find(n => n.id === state.selectedNodeId);
+      const rows = getObjectsForCurrentView();
+      const deptColor = node.dept ? DEPT_COLORS[node.dept] : null;
+
+      // Update Header Bar with Department Color Accent
+      document.getElementById('headerTitle').textContent = node.label;
+      document.getElementById('headerObjectCount').textContent = `(${rows.length} object${rows.length === 1 ? '' : 's'})`;
+      const swatch = document.getElementById('headerDeptSwatch');
+      const tag = document.getElementById('headerDeptTag');
+
+      if (deptColor) {
+        swatch.style.backgroundColor = deptColor.hex;
+        tag.style.backgroundColor = deptColor.badgeBg;
+        tag.style.borderColor = deptColor.border;
+        tag.style.color = deptColor.text;
+        tag.textContent = `${node.dept} Container`;
+      } else {
+        swatch.style.backgroundColor = '#0A246A';
+        tag.style.backgroundColor = '#E2E8F0';
+        tag.style.borderColor = '#94A3B8';
+        tag.style.color = '#1E293B';
+        tag.textContent = 'Domain / Root Container';
+      }
+
+      // Render ADUC Directory Table
+      const tbody = document.getElementById('aducTableBody');
+      if (rows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-8 text-center text-slate-500 text-xs">
+              There are no items to show in this view.
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = rows.map(r => {
+          if (r.kind === 'ou') {
+            const ou = r.data;
+            const dc = ou.dept ? DEPT_COLORS[ou.dept] : null;
+            const isSel = state.selectedObject?.kind === 'ou' && state.selectedObject?.id === ou.id;
+            const count = ou.id === 'ou-groups'
+              ? SECURITY_GROUPS.length
+              : ou.dept
+                ? USERS.filter(u => u.department === ou.dept).length
+                : TREE_NODES.filter(n => n.parent === ou.id).length;
+
+            return `
+              <tr onclick="selectObject('ou', '${ou.id}')"
+                  ondblclick="selectNode('${ou.id}')"
+                  class="aduc-row cursor-pointer ${isSel ? 'selected' : ''}"
+                  style="${dc ? `border-left: 4px solid ${dc.hex}; background-color: ${dc.softBg};` : ''}">
+                <td class="py-1.5 px-2 font-semibold text-black flex items-center gap-2">
+                  <span class="w-4 h-3.5 inline-flex items-center justify-center rounded-[2px] text-white text-[9px]" style="background-color:${dc ? dc.hex : '#D97706'};">
+                    <i class="fa-solid fa-folder"></i>
+                  </span>
+                  <span>${ou.label}</span>
+                  <span class="text-[10px] text-slate-500 font-normal">(${count} items)</span>
+                </td>
+                <td class="py-1.5 px-2 text-slate-700">Organizational Unit</td>
+                <td class="py-1.5 px-2 font-mono-win text-slate-500">—</td>
+                <td class="py-1.5 px-2">
+                  ${dc ? `<span class="px-1.5 py-0.5 text-[10px] font-semibold border" style="background-color:${dc.badgeBg}; border-color:${dc.border}; color:${dc.text};">${ou.dept}</span>` : 'Container'}
+                </td>
+                <td class="py-1.5 px-2 text-slate-600 font-mono-win text-[11px]">OU=${ou.label}</td>
+                <td class="py-1.5 px-2 text-slate-600">—</td>
+                <td class="py-1.5 px-2 text-slate-600">Active</td>
+                <td class="py-1.5 px-2 text-slate-500">—</td>
+                <td class="py-1.5 px-2 text-slate-500">Double-click to open OU</td>
+              </tr>
+            `;
+          }
+
+          if (r.kind === 'user') {
+            const u = r.data;
+            const dc = DEPT_COLORS[u.department];
+            const evalRes = evaluateUserRisk(u);
+            const isSel = state.selectedObject?.kind === 'user' && state.selectedObject?.id === u.empId;
+
+            let riskCell = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 border border-emerald-300 text-emerald-800 text-[10.5px] font-semibold"><i class="fa-solid fa-check"></i> Compliant</span>`;
+            if (evalRes.atRisk) {
+              const badgeStyles = {
+                Critical: 'bg-red-100 border-red-500 text-red-900 font-bold',
+                High: 'bg-orange-100 border-orange-500 text-orange-900 font-bold',
+                Medium: 'bg-amber-100 border-amber-500 text-amber-900 font-bold',
+                Low: 'bg-sky-100 border-sky-500 text-sky-900 font-semibold'
+              };
+              riskCell = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10.5px] ${badgeStyles[evalRes.severity]}"><i class="fa-solid fa-triangle-exclamation"></i> ${evalRes.statusText}</span>`;
+            } else if (evalRes.exception) {
+              riskCell = `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-indigo-50 border border-indigo-300 text-indigo-900 text-[10.5px] font-semibold"><i class="fa-solid fa-file-signature"></i> Approved (${evalRes.exception.ticket})</span>`;
+            }
+
+            const groupPills = u.memberships.map(m => {
+              const g = SECURITY_GROUPS.find(x => x.id === m.groupId);
+              const isBad = evalRes.issues.some(i => i.groupId === m.groupId);
+              return `<span class="inline-block px-1.5 py-0.2 mr-1 mb-0.5 border font-mono-win text-[10px] ${
+                isBad ? 'bg-red-100 border-red-500 text-red-900 font-bold' : 'bg-slate-100 border-slate-300 text-slate-800'
+              }">${g ? g.name : m.groupId}</span>`;
+            }).join('');
+
+            return `
+              <tr onclick="selectObject('user', '${u.empId}')"
+                  ondblclick="openPropertiesModal({ kind: 'user', id: '${u.empId}' })"
+                  class="aduc-row cursor-pointer ${isSel ? 'selected' : ''}"
+                  style="border-left: 4px solid ${dc.hex};">
+                <td class="py-1.5 px-2 font-semibold whitespace-nowrap">
+                  <div class="flex items-center gap-1.5">
+                    <span class="relative inline-flex items-center justify-center w-4 h-4">
+                      <i class="fa-solid fa-user ${u.enabled ? 'text-[#0054E3]' : 'text-slate-400'}"></i>
+                      ${!u.enabled ? '<i class="fa-solid fa-circle-arrow-down text-red-600 text-[9px] absolute -bottom-0.5 -right-0.5 bg-white rounded-full"></i>' : ''}
+                    </span>
+                    <span class="${u.enabled ? 'text-black' : 'text-slate-500 line-through'}">${u.name}</span>
+                    <span class="text-[10px] text-slate-500 font-mono-win">(${u.empId})</span>
+                  </div>
+                </td>
+                <td class="py-1.5 px-2 text-slate-700 whitespace-nowrap">User</td>
+                <td class="py-1.5 px-2 font-mono-win text-slate-800 whitespace-nowrap">${u.sam}</td>
+                <td class="py-1.5 px-2 whitespace-nowrap">
+                  <span class="px-1.5 py-0.5 text-[10.5px] font-semibold border" style="background-color:${dc.badgeBg}; border-color:${dc.border}; color:${dc.text};">
+                    ${u.department}
+                  </span>
+                </td>
+                <td class="py-1.5 px-2 text-slate-800 whitespace-nowrap">${u.role}</td>
+                <td class="py-1.5 px-2 text-slate-700 whitespace-nowrap">
+                  ${u.workerType}${u.endDate ? ` <span class="font-mono-win text-[10px] ${u.endDate < AUDIT_DATE ? 'text-red-700 font-bold' : 'text-slate-500'}">[End: ${u.endDate}]</span>` : ''}
+                </td>
+                <td class="py-1.5 px-2 whitespace-nowrap">
+                  ${
+                    u.enabled
+                      ? '<span class="text-emerald-800 font-semibold">Enabled</span>'
+                      : '<span class="text-red-700 font-semibold">Disabled</span>'
+                  }
+                </td>
+                <td class="py-1.5 px-2 whitespace-nowrap">${riskCell}</td>
+                <td class="py-1.5 px-2">${groupPills || '<span class="text-slate-400 italic">None</span>'}</td>
+              </tr>
+            `;
+          }
+
+          if (r.kind === 'group') {
+            const g = r.data;
+            const isSel = state.selectedObject?.kind === 'group' && state.selectedObject?.id === g.id;
+            const members = USERS.filter(u => u.memberships.some(m => m.groupId === g.id));
+            return `
+              <tr onclick="selectObject('group', '${g.id}')"
+                  ondblclick="openPropertiesModal({ kind: 'group', id: '${g.id}' })"
+                  class="aduc-row cursor-pointer ${isSel ? 'selected' : ''}"
+                  style="border-left: 4px solid #475569;">
+                <td class="py-1.5 px-2 font-semibold text-black whitespace-nowrap">
+                  <i class="fa-solid fa-users text-slate-700 mr-1.5"></i>${g.name}
+                </td>
+                <td class="py-1.5 px-2 text-slate-700 whitespace-nowrap">Security Group - Global</td>
+                <td class="py-1.5 px-2 font-mono-win text-slate-800 whitespace-nowrap">${g.id}</td>
+                <td class="py-1.5 px-2 whitespace-nowrap"><span class="px-1.5 py-0.5 text-[10.5px] font-semibold bg-slate-200 border border-slate-400 text-slate-800">Security Groups</span></td>
+                <td class="py-1.5 px-2 text-slate-800">${g.resource}</td>
+                <td class="py-1.5 px-2 text-slate-700">${g.risk} Sensitivity</td>
+                <td class="py-1.5 px-2 text-emerald-800 font-semibold">Active</td>
+                <td class="py-1.5 px-2 text-slate-700">${members.length} member(s)</td>
+                <td class="py-1.5 px-2 text-slate-600">${g.description}</td>
+              </tr>
+            `;
+          }
+
+          const s = r.data;
+          return `
+            <tr class="aduc-row">
+              <td class="py-1.5 px-2 font-semibold text-black"><i class="fa-solid fa-desktop text-slate-600 mr-1.5"></i>${s.name}</td>
+              <td class="py-1.5 px-2 text-slate-700">${s.type}</td>
+              <td class="py-1.5 px-2 font-mono-win text-slate-700">${s.sam}</td>
+              <td class="py-1.5 px-2 text-slate-700">${s.dept}</td>
+              <td class="py-1.5 px-2 text-slate-700">${s.role}</td>
+              <td class="py-1.5 px-2 text-slate-700">System</td>
+              <td class="py-1.5 px-2 text-emerald-800 font-semibold">${s.status}</td>
+              <td class="py-1.5 px-2 text-slate-500">System Object</td>
+              <td class="py-1.5 px-2 text-slate-500">—</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      renderContainerSummaryAndSolutions();
+    }
+
+    // =========================================================================
+    // 7. CONTAINER SUMMARY & DEDICATED "SOLUTIONS" BOX RENDERER
+    // =========================================================================
+    function renderContainerSummaryAndSolutions() {
+      const node = TREE_NODES.find(n => n.id === state.selectedNodeId);
+      const scopeUsers = getUsersInCurrentContainer();
+      const atRiskUsers = scopeUsers.filter(u => evaluateUserRisk(u).atRisk);
+      const compliantUsers = scopeUsers.filter(u => !evaluateUserRisk(u).atRisk);
+
+      document.getElementById('summaryContainerName').textContent = node.label;
+
+      const btnApplyAll = document.getElementById('btnApplyAllSolutions');
+      btnApplyAll.disabled = atRiskUsers.length === 0;
+
+      // 1. Container Statistics Box
+      const statsGrid = document.getElementById('containerStatsGrid');
+      if (node.id === 'ou-groups') {
+        statsGrid.innerHTML = `
+          <div class="bg-white border border-slate-300 p-1.5">
+            <div class="text-sm font-bold text-[#003399]">${SECURITY_GROUPS.length}</div>
+            <div class="text-[10px] text-slate-600">Security Groups</div>
+          </div>
+          <div class="bg-white border border-slate-300 p-1.5">
+            <div class="text-sm font-bold text-red-700">4</div>
+            <div class="text-[10px] text-slate-600">High/Critical</div>
+          </div>
+          <div class="bg-white border border-slate-300 p-1.5">
+            <div class="text-sm font-bold text-emerald-700">Global</div>
+            <div class="text-[10px] text-slate-600">AD Group Scope</div>
+          </div>
+        `;
+      } else {
+        statsGrid.innerHTML = `
+          <div class="bg-white border border-slate-300 p-1.5">
+            <div class="text-sm font-bold text-[#003399]">${scopeUsers.length}</div>
+            <div class="text-[10px] text-slate-600">Total Users</div>
+          </div>
+          <div class="bg-white border border-slate-300 p-1.5">
+            <div class="text-sm font-bold text-emerald-700">${compliantUsers.length}</div>
+            <div class="text-[10px] text-slate-600">Compliant</div>
+          </div>
+          <div class="bg-white border border-slate-300 p-1.5">
+            <div class="text-sm font-bold ${atRiskUsers.length > 0 ? 'text-red-700' : 'text-slate-600'}">${atRiskUsers.length}</div>
+            <div class="text-[10px] text-slate-600">At-Risk</div>
+          </div>
+        `;
+      }
+
+      document.getElementById('containerPolicyNote').innerHTML = `
+        <strong>Distinguished Name:</strong> <span class="font-mono-win text-[10.5px]">${node.dn}</span><br/>
+        <strong>Audit Baseline:</strong> Principle of Least Privilege evaluated as of <span class="font-mono-win">${AUDIT_DATE}</span>.
+      `;
+
+      // 2. Selected Object Quick Box
+      const sel = state.selectedObject;
+      const quickBox = document.getElementById('selectedObjectQuickBox');
+      if (sel && sel.kind === 'user') {
+        const u = USERS.find(x => x.empId === sel.id);
+        if (u) {
+          const ev = evaluateUserRisk(u);
+          quickBox.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-black">${u.name} (<span class="font-mono-win">${u.sam}</span>)</span>
+              <button onclick="openPropertiesModal({ kind: 'user', id: '${u.empId}' })" class="win-btn px-2 py-0.5 text-[10px] font-semibold">Properties...</button>
+            </div>
+            <div>Role: <strong>${u.role}</strong> (${u.workerType}) • Dept: <strong>${u.department}</strong></div>
+            <div>Audit Status: <strong class="${ev.atRisk ? 'text-red-700' : 'text-emerald-800'}">${ev.statusText}</strong></div>
+          `;
+        }
+      } else if (sel && sel.kind === 'group') {
+        const g = SECURITY_GROUPS.find(x => x.id === sel.id);
+        if (g) {
+          quickBox.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-black">${g.name} (<span class="font-mono-win">${g.id}</span>)</span>
+              <button onclick="openPropertiesModal({ kind: 'group', id: '${g.id}' })" class="win-btn px-2 py-0.5 text-[10px] font-semibold">Properties...</button>
+            </div>
+            <div>Resource: <strong>${g.resource}</strong></div>
+            <div>Risk Tier: <strong>${g.risk}</strong></div>
+          `;
+        }
+      } else {
+        quickBox.innerHTML = `
+          <div>Container: <strong>${node.label}</strong></div>
+          <div>Click any user or security group above to inspect attributes, or double-click to open its Properties dialog.</div>
+        `;
+      }
+
+      // 3. SOLUTIONS BOX — Explicit Actionable Solution for EVERY At-Risk Item
+      const solutionsContainer = document.getElementById('solutionsBoxContent');
+
+      // Sort at-risk users by severity (Critical -> High -> Medium -> Low)
+      const rank = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+      const sortedAtRisk = [...atRiskUsers].sort((a, b) => rank[evaluateUserRisk(b).severity] - rank[evaluateUserRisk(a).severity]);
+
+      if (sortedAtRisk.length === 0) {
+        solutionsContainer.innerHTML = `
+          <div class="bg-emerald-50 border border-emerald-300 p-3 text-xs text-emerald-950 flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-emerald-700 text-lg"></i>
+            <div>
+              <div class="font-bold">Zero At-Risk Accounts in ${node.label}</div>
+              <div class="text-[11px] text-emerald-900">All employee accounts and security group memberships in this container satisfy least-privilege policies.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      solutionsContainer.innerHTML = sortedAtRisk.map((u, idx) => {
+        const ev = evaluateUserRisk(u);
+        const dc = DEPT_COLORS[u.department];
+        const sevHeaderColors = {
+          Critical: 'bg-red-700 text-white',
+          High: 'bg-orange-700 text-white',
+          Medium: 'bg-amber-700 text-white',
+          Low: 'bg-sky-700 text-white'
+        };
+
+        return `
+          <div class="bg-white border border-[#9CA3AF] shadow-2xs">
+            <!-- At-Risk Item Header -->
+            <div class="px-2.5 py-1.5 bg-[#F8FAFC] border-b border-slate-300 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-1.5 py-0.5 text-[10px] font-bold uppercase ${sevHeaderColors[ev.severity]}">${ev.severity} Risk</span>
+                <span class="font-bold text-black text-xs">${idx + 1}. ${u.name} (<span class="font-mono-win">${u.sam}</span> / ${u.empId})</span>
+                <span class="px-1.5 py-0.2 text-[10px] font-semibold border" style="background-color:${dc.badgeBg}; border-color:${dc.border}; color:${dc.text};">${u.department} • ${u.role}</span>
+              </div>
+              <button onclick="applySolutionForUser('${u.empId}')" class="win-btn px-2.5 py-0.5 text-[11px] font-bold flex items-center gap-1">
+                <i class="fa-solid fa-check text-emerald-700"></i>
+                <span>Apply Solution</span>
+              </button>
+            </div>
+
+            <!-- Finding & Recommended Solution Body -->
+            <div class="p-2.5 text-[11px] space-y-1.5">
+              <div class="text-red-900">
+                <strong>Risk Finding:</strong> ${ev.issues.map(i => i.label).join('; ')}.
+              </div>
+              <div class="bg-[#F0F7FF] border-l-4 border-[#0054E3] p-2 text-slate-900">
+                <div class="font-bold text-[#003399] mb-0.5">
+                  <i class="fa-solid fa-lightbulb mr-1"></i>Recommended Solution:
+                </div>
+                <p class="mb-1 font-medium">${ev.solutionSummary}</p>
+                <ul class="list-disc pl-4 space-y-0.5 text-slate-700">
+                  ${ev.solutionSteps.map(step => `<li>${step}</li>`).join('')}
+                </ul>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectObject(kind, id) {
+      state.selectedObject = { kind, id };
+      renderMainPane();
+    }
+
+    function openSelectedProperties() {
+      if (state.selectedObject) {
+        openPropertiesModal(state.selectedObject);
+      } else {
+        openPropertiesModal({ kind: 'ou', id: state.selectedNodeId });
+      }
+    }
+
+    function updateStatusBar() {
+      const totalRisk = USERS.filter(u => evaluateUserRisk(u).atRisk).length;
+      document.getElementById('statusLeft').textContent =
+        `${USERS.length} User(s), ${SECURITY_GROUPS.length} Security Group(s), 6 Departmental OU(s)`;
+      const riskEl = document.getElementById('statusRisk');
+      if (totalRisk > 0) {
+        riskEl.textContent = `${totalRisk} At-Risk Account(s) Requiring Solution`;
+        riskEl.className = 'win-sunken px-2 py-0.5 font-bold text-red-700';
+      } else {
+        riskEl.textContent = `0 At-Risk Accounts (100% Least-Privilege Compliant)`;
+        riskEl.className = 'win-sunken px-2 py-0.5 font-bold text-emerald-800';
+      }
+    }
+
+    // =========================================================================
+    // 8. CLASSIC WINDOWS ADUC PROPERTIES DIALOG (General / Account / Member Of / PriVis)
+    // =========================================================================
+    function openPropertiesModal(obj) {
+      state.selectedObject = obj;
+      const modal = document.getElementById('propertiesModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      switchPropTab('general');
+    }
+
+    function closePropertiesModal() {
+      const modal = document.getElementById('propertiesModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function switchPropTab(tab) {
+      state.activePropTab = tab;
+      document.querySelectorAll('.prop-tab').forEach(btn => {
+        if (btn.dataset.tab === tab) {
+          btn.className = 'prop-tab px-3 py-1 text-[11px] bg-white border-t border-l border-r border-[#808080] font-semibold -mb-[1px]';
+        } else {
+          btn.className = 'prop-tab px-3 py-1 text-[11px] bg-[#E1E1E1] border-t border-l border-r border-[#ACA899] text-slate-700';
+        }
+      });
+
+      const obj = state.selectedObject;
+      const body = document.getElementById('propDialogBody');
+      const title = document.getElementById('propDialogTitle');
+
+      if (obj.kind === 'user') {
+        const u = USERS.find(x => x.empId === obj.id);
+        const dc = DEPT_COLORS[u.department];
+        const ev = evaluateUserRisk(u);
+        title.textContent = `${u.name} Properties`;
+
+        if (tab === 'general') {
+          body.innerHTML = `
+            <div class="flex items-center gap-3 pb-2.5 border-b border-slate-300">
+              <i class="fa-solid fa-user text-2xl text-[#0054E3]"></i>
+              <div>
+                <div class="font-bold text-sm text-black">${u.name}</div>
+                <div class="font-mono-win text-[11px] text-slate-600">CN=${u.name},OU=${u.department},OU=Eagle Business Solutions,DC=eaglebusiness,DC=local</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-[11.5px]">
+              <div>
+                <label class="block text-slate-600 mb-0.5">Employee ID:</label>
+                <div class="win-sunken px-2 py-1 font-mono-win font-semibold">${u.empId}</div>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-0.5">Department OU:</label>
+                <div class="px-2 py-1 border font-semibold" style="background-color:${dc.badgeBg}; border-color:${dc.border}; color:${dc.text};">${u.department}</div>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-0.5">Job Title / Role:</label>
+                <div class="win-sunken px-2 py-1 font-semibold">${u.role}</div>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-0.5">Worker Classification:</label>
+                <div class="win-sunken px-2 py-1">${u.workerType}</div>
+              </div>
+            </div>
+          `;
+        } else if (tab === 'account') {
+          body.innerHTML = `
+            <div class="space-y-3 text-[11.5px]">
+              <div>
+                <label class="block text-slate-600 mb-0.5">User logon name (UPN):</label>
+                <div class="win-sunken px-2 py-1 font-mono-win">${u.sam}@eaglebusiness.local</div>
+              </div>
+              <div>
+                <label class="block text-slate-600 mb-0.5">User logon name (pre-Windows 2000 / SAM):</label>
+                <div class="win-sunken px-2 py-1 font-mono-win">EAGLEBUSINESS\\${u.sam}</div>
+              </div>
+              <div class="win-groupbox">
+                <span class="win-groupbox-title">Account Options & Expiration</span>
+                <div class="pt-1 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span>Account Status: <strong class="${u.enabled ? 'text-emerald-800' : 'text-red-700'}">${u.enabled ? 'Account is Enabled' : 'Account is Disabled'}</strong></span>
+                    <button onclick="toggleUserEnabled('${u.empId}')" class="win-btn px-2.5 py-0.5 text-[11px] font-semibold">
+                      ${u.enabled ? 'Disable Account' : 'Enable Account'}
+                    </button>
+                  </div>
+                  <div>
+                    Contract / Employment End Date:
+                    <strong class="font-mono-win ${u.endDate && u.endDate < AUDIT_DATE ? 'text-red-700' : ''}">
+                      ${u.endDate || 'Never (Active)'}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (tab === 'memberof') {
+          body.innerHTML = `
+            <div class="text-[11.5px] space-y-2">
+              <div class="font-semibold">Member of (${u.memberships.length} Security Groups):</div>
+              <div class="win-sunken p-1.5 space-y-1 max-h-56 overflow-y-auto">
+                ${
+                  u.memberships.length === 0
+                    ? '<div class="text-slate-500 italic p-2">No security group memberships assigned.</div>'
+                    : u.memberships.map(m => {
+                        const g = SECURITY_GROUPS.find(x => x.id === m.groupId);
+                        const isBad = ev.issues.some(i => i.groupId === m.groupId);
+                        return `
+                          <div class="px-2 py-1.5 border ${isBad ? 'bg-red-50 border-red-400' : 'bg-[#F8FAFC] border-slate-200'} flex items-center justify-between gap-2">
+                            <div>
+                              <div class="font-bold text-black"><i class="fa-solid fa-users text-slate-600 mr-1"></i>${g.name} (${g.id})</div>
+                              <div class="text-[10.5px] text-slate-600">${g.resource} • Risk: ${g.risk} • Policy: ${m.policy}${m.ticket ? ` • Ticket: ${m.ticket}` : ''}</div>
+                            </div>
+                            <button onclick="revokeSingleGroup('${u.empId}', '${m.groupId}')" class="win-btn px-2 py-0.5 text-[11px] font-semibold text-red-800">Remove</button>
+                          </div>
+                        `;
+                      }).join('')
+                }
+              </div>
+            </div>
+          `;
+        } else if (tab === 'privis') {
+          body.innerHTML = `
+            <div class="space-y-2.5 text-[11.5px]">
+              <div class="p-2.5 border ${ev.atRisk ? 'bg-red-50 border-red-400' : 'bg-emerald-50 border-emerald-400'}">
+                <div class="font-bold ${ev.atRisk ? 'text-red-900' : 'text-emerald-900'}">
+                  PriVis Least-Privilege Verdict: ${ev.statusText}
+                </div>
+              </div>
+              ${
+                ev.atRisk
+                  ? `
+                    <div class="win-groupbox">
+                      <span class="win-groupbox-title">Remediation Solution</span>
+                      <div class="pt-1 space-y-2">
+                        <p class="font-semibold text-black">${ev.solutionSummary}</p>
+                        <ul class="list-disc pl-4 space-y-1 text-slate-700">
+                          ${ev.solutionSteps.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                        <div class="pt-1">
+                          <button onclick="applySolutionForUser('${u.empId}')" class="win-btn px-3 py-1 font-bold text-[#003399]">
+                            <i class="fa-solid fa-wrench mr-1"></i>Apply Solution Now
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  `
+                  : `<p class="text-slate-700">All permissions for <strong>${u.name}</strong> comply with Eagle Business Solutions least-privilege policies.</p>`
+              }
+            </div>
+          `;
+        }
+      } else if (obj.kind === 'group') {
+        const g = SECURITY_GROUPS.find(x => x.id === obj.id);
+        const members = USERS.filter(u => u.memberships.some(m => m.groupId === g.id));
+        title.textContent = `${g.name} (${g.id}) Properties`;
+        body.innerHTML = `
+          <div class="space-y-2.5 text-[11.5px]">
+            <div><strong>Group Name:</strong> ${g.name} (<span class="font-mono-win">${g.id}</span>)</div>
+            <div><strong>Group Scope / Type:</strong> Global / Security</div>
+            <div><strong>Sensitivity Tier:</strong> ${g.risk}</div>
+            <div><strong>Target Resource:</strong> ${g.resource}</div>
+            <div class="win-sunken p-2 bg-[#F8FAFC]">${g.description}</div>
+            <div class="font-semibold pt-1">Current Members (${members.length}):</div>
+            <div class="win-sunken p-1.5 space-y-1 max-h-44 overflow-y-auto">
+              ${members.map(m => `
+                <div class="px-2 py-1 bg-[#F8FAFC] border border-slate-200 flex items-center justify-between">
+                  <span>${m.name} (<span class="font-mono-win">${m.sam}</span>) — ${m.department}</span>
+                  <button onclick="revokeSingleGroup('${m.empId}', '${g.id}')" class="win-btn px-2 py-0.5 text-[10px]">Remove</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        const ou = TREE_NODES.find(x => x.id === obj.id) || TREE_NODES[0];
+        title.textContent = `${ou.label} Properties`;
+        body.innerHTML = `
+          <div class="space-y-2.5 text-[11.5px]">
+            <div><strong>Container Name:</strong> ${ou.label}</div>
+            <div><strong>Distinguished Name:</strong><div class="win-sunken p-2 font-mono-win mt-1">${ou.dn}</div></div>
+            <div><strong>Object Protection:</strong> Protect container from accidental deletion (Enabled)</div>
+          </div>
+        `;
+      }
+    }
+
+    // =========================================================================
+    // 9. CREATE USER & POWERSHELL SCRIPT MODALS
+    // =========================================================================
+    function openCreateUserModal() {
+      const node = TREE_NODES.find(n => n.id === state.selectedNodeId);
+      if (node && node.dept && node.dept !== 'Security Groups') {
+        document.getElementById('newDept').value = node.dept;
+      }
+      const modal = document.getElementById('createUserModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCreateUserModal() {
+      const modal = document.getElementById('createUserModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleCreateUser(e) {
+      e.preventDefault();
+      const name = document.getElementById('newFullName').value.trim();
+      const sam = document.getElementById('newSam').value.trim().toLowerCase();
+      const department = document.getElementById('newDept').value;
+      const role = document.getElementById('newRole').value.trim();
+      const workerType = document.getElementById('newWorkerType').value;
+
+      const defaultGroup = {
+        'Customer Support': 'G001',
+        'IT': 'G007',
+        'Sales': 'G004',
+        'Finance': 'G005',
+        'HR': 'G006'
+      }[department];
+
+      const empId = `U${String(USERS.length + 1).padStart(3, '0')}`;
+      USERS.push({
+        empId,
+        name,
+        sam,
+        department,
+        role,
+        workerType,
+        enabled: true,
+        endDate: null,
+        memberships: [
+          { groupId: defaultGroup, policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null },
+          { groupId: 'G008', policy: 'Allowed', approvalStatus: 'N/A', ticket: null, expires: null }
+        ]
+      });
+
+      closeCreateUserModal();
+      e.target.reset();
+      showToast(`Created user ${name} (${sam}) in OU=${department},OU=Eagle Business Solutions.`, 'info');
+      renderAll();
+    }
+
+    function openPowerShellModal() {
+      const lines = [
+        `# Eagle Business Solutions (eaglebusiness.local) - Active Directory Setup & Remediation`,
+        `Import-Module ActiveDirectory`,
+        `$DomainDN = "DC=eaglebusiness,DC=local"`,
+        `$CompanyOU = "OU=Eagle Business Solutions,$DomainDN"`,
+        ``,
+        `# Create Root & Departmental Organizational Units`,
+        `New-ADOrganizationalUnit -Name "Eagle Business Solutions" -Path $DomainDN -ProtectedFromAccidentalDeletion $true`,
+        `foreach ($ou in @("Customer Support","IT","Sales","Finance","HR","Security Groups")) {`,
+        `    New-ADOrganizationalUnit -Name $ou -Path $CompanyOU -ProtectedFromAccidentalDeletion $true`,
+        `}`,
+        ``,
+        `# Provision Security Groups`
+      ];
+
+      SECURITY_GROUPS.forEach(g => {
+        lines.push(`New-ADGroup -Name "${g.name}" -SamAccountName "${g.name}" -GroupCategory Security -GroupScope Global -Path "OU=Security Groups,$CompanyOU" -Description "${g.id} - ${g.description}"`);
+      });
+
+      lines.push(``, `# Provision Employee Accounts & Group Memberships`);
+      USERS.forEach(u => {
+        lines.push(`New-ADUser -Name "${u.name}" -SamAccountName "${u.sam}" -UserPrincipalName "${u.sam}@eaglebusiness.local" -Department "${u.department}" -Title "${u.role}" -EmployeeID "${u.empId}" -Path "OU=${u.department},$CompanyOU" -Enabled ${u.enabled ? '$true' : '$false'}`);
+        u.memberships.forEach(m => {
+          const g = SECURITY_GROUPS.find(x => x.id === m.groupId);
+          if (g) lines.push(`Add-ADGroupMember -Identity "${g.name}" -Members "${u.sam}"`);
+        });
+      });
+
+      document.getElementById('psScriptContent').textContent = lines.join('\n');
+      const modal = document.getElementById('powershellModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePowerShellModal() {
+      const modal = document.getElementById('powershellModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function copyPowerShellScript() {
+      const text = document.getElementById('psScriptContent').textContent;
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('PowerShell Active Directory script copied to clipboard.', 'info');
+    }
+
+    // =========================================================================
+    // 10. TOAST NOTIFICATION & INITIALIZATION
+    // =========================================================================
+    let toastTimer = null;
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      document.getElementById('toastMessage').textContent = msg;
+      banner.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, 4200);
+    }
+
+    function hideToast() {
+      document.getElementById('toastBanner').classList.add('hidden');
+    }
+
+    window.onload = function () {
+      renderAll();
+    };
+  </script>
+</body>
+</html>

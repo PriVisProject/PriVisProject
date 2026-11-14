@@ -1,0 +1,13 @@
+user_id,name,sam_account_name,department,role,worker_type,enabled,end_date
+U001,Maya Torres,mtorres,Customer Support,Support Rep,Part-Time,TRUE,
+U002,Alex Chen,achen,IT,IT Admin,Full-Time,TRUE,
+U003,Taylor Morgan,tmorgan,IT,IT Contractor,Contractor,TRUE,2026-11-01
+U004,Jordan Lee,jlee,Customer Support,Support Rep,Part-Time,TRUE,
+U005,Sam Patel,spatel,Sales,Sales Rep,Full-Time,TRUE,
+U006,Chris Rivera,crivera,Finance,Finance Analyst,Full-Time,TRUE,
+U007,Renee Brooks,rbrooks,Finance,Payroll Specialist,Full-Time,TRUE,
+U008,Avery Kim,akim,Sales,Sales Manager,Full-Time,TRUE,
+U009,Morgan Ellis,mellis,HR,HR Coordinator,Full-Time,TRUE,
+U010,Jamie Price,jprice,IT,IT Support,Full-Time,TRUE,
+U011,Casey Nguyen,cnguyen,Finance,Finance Manager,Full-Time,TRUE,
+U012,Devon Reed,dreed,Sales,Sales Rep,Former Employee,FALSE,2026-09-30
