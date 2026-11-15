@@ -98,6 +98,8 @@ def _parse_value(field, value, location):
         raise DataValidationError(f"{location}: {field} contains a control character.")
     if not value and field not in OPTIONAL_FIELDS:
         raise DataValidationError(f"{location}: {field} is required.")
+    if field == "enabled":
+        value = value.upper()
     if field in CHOICES and value not in CHOICES[field]:
         choices = ", ".join(sorted(CHOICES[field]))
         raise DataValidationError(f"{location}: {field} must be one of {choices}.")

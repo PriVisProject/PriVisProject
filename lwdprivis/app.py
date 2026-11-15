@@ -4,9 +4,11 @@ import sys
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QFontDatabase
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QDialog
 
+from data_loader import DEFAULT_DATA_FOLDER
 from main_window import MainWindow
+from startup import StartupDialog
 
 
 def main() -> int:
@@ -17,9 +19,26 @@ def main() -> int:
     fonts = set(QFontDatabase.families())
     if "Inter" in fonts:
         app.setFont(QFont("Inter", 13))
-    window = MainWindow()
-    window.show()
-    return app.exec()
+    startup = StartupDialog()
+    while startup.exec() == QDialog.DialogCode.Accepted:
+        data_folder = None if startup.start_empty else DEFAULT_DATA_FOLDER
+        window = MainWindow(data_folder=data_folder)
+        logged_out = False
+
+        def logout():
+            nonlocal logged_out
+            logged_out = True
+            window.close()
+
+        window.advanced.logout_button.clicked.connect(logout)
+        window.show()
+        exit_code = app.exec()
+        window.advanced.logout_button.clicked.disconnect(logout)
+        window.deleteLater()
+        if not logged_out:
+            return exit_code
+        startup.show_login(start_empty=startup.start_empty)
+    return 0
 
 
 if __name__ == "__main__":

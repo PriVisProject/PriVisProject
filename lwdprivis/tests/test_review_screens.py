@@ -1,8 +1,13 @@
 from datetime import date
+from pathlib import Path
+from shutil import copytree
 from tempfile import TemporaryDirectory
 from time import monotonic, sleep
 import unittest
+from unittest.mock import patch
 
+from PySide6.QtCore import QCoreApplication, QEvent
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from data_loader import DEFAULT_DATA_FOLDER
@@ -16,9 +21,15 @@ class ReviewScreenTests(unittest.TestCase):
 
     def setUp(self):
         self.window = MainWindow(review_date=date(2026, 11, 14))
-        self.addCleanup(self.window.close)
+        self.addCleanup(self.dispose_window)
         self.window.show()
         self.wait_for_load()
+
+    def dispose_window(self):
+        self.window.close()
+        self.wait_for_load()
+        self.window.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 
     def wait_for_load(self):
         deadline = monotonic() + 5
@@ -71,6 +82,64 @@ class ReviewScreenTests(unittest.TestCase):
         self.assertEqual(self.window.users.proxy.rowCount(), 12)
         self.assertEqual(self.window.data_folder, DEFAULT_DATA_FOLDER)
         self.assertTrue(self.window.open_folder.isEnabled())
+
+    def test_import_and_live_csv_scan_recover_after_invalid_save(self):
+        self.assertIn("Built-in sample", self.window.source_status.text())
+        with TemporaryDirectory() as temporary:
+            folder = Path(temporary) / "Example export"
+            copytree(DEFAULT_DATA_FOLDER, folder)
+            users = folder / "users.csv"
+            selected = [str(path) for path in folder.glob("*.csv")]
+            self.assertEqual(len(selected), 4)
+            with patch("main_window.QFileDialog.getOpenFileNames", return_value=(selected, "")):
+                self.window.open_folder.click()
+            self.wait_for_load()
+            self.assertEqual(self.window.data_folder, folder)
+            self.assertIn("Example export", self.window.source_status.text())
+            self.assertIn("4 CSV files", self.window.source_status.text())
+            self.assertIn("access_policy.csv", self.window.source_status.toolTip())
+
+            self.window._live_timer.setInterval(25)
+            self.window.live_scan.click()
+            original = users.read_bytes()
+            users.write_bytes(b"invalid")
+            self.wait_until(lambda: self.window.load_error.isVisible())
+            self.assertEqual(self.window.users.proxy.rowCount(), 12)
+            self.assertIn("Example export", self.window.source_status.text())
+
+            replacement = users.with_suffix(".tmp")
+            replacement.write_bytes(original.replace(b"Maya Torres", b"Maya Updated"))
+            replacement.replace(users)
+            self.wait_until(lambda: self.window.users.model.rows[0][0] == "Maya Updated")
+            self.assertFalse(self.window.load_error.isVisible())
+
+            self.window.live_scan.click()
+            users.write_bytes(original)
+            QTest.qWait(100)
+            self.assertEqual(self.window.users.model.rows[0][0], "Maya Updated")
+
+    def test_empty_workspace_can_import_its_first_dataset(self):
+        self.dispose_window()
+        self.window = MainWindow(data_folder=None)
+        self.window.show()
+        self.assertIsNone(self.window._load_thread)
+        self.assertIsNone(self.window.data_folder)
+        self.assertIn("0 CSV files", self.window.source_status.text())
+        self.assertEqual(self.window.users.proxy.rowCount(), 0)
+        self.assertFalse(self.window.live_scan.isEnabled())
+        with patch("main_window.QFileDialog.getOpenFileNames",
+                   return_value=([str(DEFAULT_DATA_FOLDER / "users.csv")], "")):
+            self.window.open_folder.click()
+        self.wait_for_load()
+        self.assertEqual(self.window.data_folder, DEFAULT_DATA_FOLDER)
+        self.assertEqual(self.window.users.proxy.rowCount(), 12)
+        self.assertTrue(self.window.live_scan.isEnabled())
+
+    def wait_until(self, condition):
+        deadline = monotonic() + 5
+        while not condition() and monotonic() < deadline:
+            QTest.qWait(10)
+        self.assertTrue(condition())
 
     def test_simulation_preview_and_reset_preserve_live_findings(self):
         simulator = self.window.simulations
