@@ -16,7 +16,7 @@ class SolutionsPage(QWidget):
         self.remaining = []
         layout = QVBoxLayout(self)
         note = QLabel(
-            "Actions apply to an in-memory sandbox. Reopen the data folder to reset it."
+            "Actions apply to an in-memory sandbox. Reimport the dataset to reset it."
         )
         note.setWordWrap(True)
         layout.addWidget(note)

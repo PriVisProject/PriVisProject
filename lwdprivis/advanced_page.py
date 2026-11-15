@@ -2,7 +2,8 @@
 
 from html import escape
 
-from PySide6.QtWidgets import QLabel, QTabWidget, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QTabWidget, QVBoxLayout, QWidget
 
 from access_evidence import NO_POLICY, POLICY_DECISIONS
 from review_pages import RULE_NAMES, ReviewTable, detail_section
@@ -35,7 +36,14 @@ class AdvancedPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         intro = QLabel("Inspect direct memberships, group risk colors, and policy evidence.")
         intro.setWordWrap(True)
-        layout.addWidget(intro)
+        header = QHBoxLayout()
+        header.addWidget(intro, 1)
+        self.logout_button = QPushButton("Log Out")
+        self.logout_button.setObjectName("logout")
+        self.logout_button.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
+        self.logout_button.setProperty("solutionAction", True)
+        header.addWidget(self.logout_button)
+        layout.addLayout(header)
         self.department_legend = QLabel()
         self.department_legend.setWordWrap(True)
         layout.addWidget(self.department_legend)

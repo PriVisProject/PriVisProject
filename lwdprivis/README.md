@@ -30,9 +30,26 @@ py -3.13 -m venv .venv
 
 After setup, you can also double-click `launch.bat`. If your Python installation provides `python` instead of `py`, check `python --version` for 3.13 and use `python -m venv .venv` in the first step.
 
+## Demo sign-in
+
+After the loading animation, choose **Demo Mode** for the built-in sample or
+**New Import Mode** to start with an empty workspace. Sign in with one of
+the configured demo administrator accounts. Use **Log Out** in **Advanced**
+to return to sign-in. Signing in again starts a fresh session in the same
+workspace mode.
+
 ## Using PriVis
 
-PriVis opens the bundled `data/sample` folder and uses the computer's local date. **Open Data Folder…** loads another validated dataset. If the load fails, the previous review stays available.
+Demo Mode opens the bundled `data/sample` folder. PriVis uses the computer's local date.
+Choose **Import CSV Dataset…** and select one or more required CSV files from the same folder.
+PriVis loads and validates all four required files from that folder. The sidebar shows the active
+source and file count. Hover over the source to see the folder path and filenames.
+
+Turn on **Live CSV Scan** to reload the active dataset when one of its files
+changes on disk. PriVis keeps the last successfully loaded review if a file is
+missing or invalid. Saving a corrected file triggers another scan. A successful
+reload resets the simulation and remediation sandbox. Live scan reads local CSV
+files and exported datasets, including CSVs exported from Active Directory.
 
 | Screen | What it shows |
 | --- | --- |
@@ -42,7 +59,7 @@ PriVis opens the bundled `data/sample` folder and uses the computer's local date
 | Simulations | Before-and-after findings for removing one direct membership |
 | Advanced | Access and approval evidence, policy coverage, and a remediation sandbox |
 
-In **Advanced → Solutions**, **Execute Highlighted Fix** and **Execute All Fixes** apply actions to the session sandbox. They disable expired accounts or remove the relevant denied or unapproved direct memberships. The app recalculates findings after each execution. Reopen the data folder to reset the sandbox. Source files stay untouched.
+In **Advanced → Solutions**, **Execute Highlighted Fix** and **Execute All Fixes** apply actions to the session sandbox. They disable expired accounts or remove the relevant denied or unapproved direct memberships. The app recalculates findings after each execution. Reimport the dataset to reset the sandbox. Source files stay untouched.
 
 ## Data
 
@@ -53,7 +70,7 @@ Place the four CSVs together in one folder. Use the headers in the bundled files
 - `memberships.csv` links users to groups and contains approval status, optional tickets, and expiry dates.
 - `access_policy.csv` defines access decisions and reasons by role and group.
 
-Files must be UTF-8 and at most 10 MiB each. Enabled values are `TRUE` or `FALSE`. Dates use `YYYY-MM-DD`. Keep private datasets outside the repository and select them through the app.
+Files must be UTF-8 and at most 10 MiB each. Enabled values are `TRUE` or `FALSE`. Dates use `YYYY-MM-DD`. Keep private datasets outside the repository and import them through the app.
 
 The engine checks enabled accounts with past end dates, explicitly denied memberships, and approval-required memberships without valid approval. Approval requires a ticket and an expiry date. End dates and approvals remain valid through the stated date. Advanced Policy Coverage surfaces direct memberships without a matching rule.
 

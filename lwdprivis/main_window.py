@@ -4,7 +4,7 @@ from datetime import date
 import logging
 from pathlib import Path
 
-from PySide6.QtCore import QSize, QThread, Qt
+from PySide6.QtCore import QSize, QThread, QTimer, Qt
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
 
 
 from advanced_page import AdvancedPage
-from data_loader import DEFAULT_DATA_FOLDER, DataValidationError
+from data_loader import DEFAULT_DATA_FOLDER, SCHEMAS, DataValidationError
 from review_pages import Overview, RISK_COLORS, ReviewTable, load_review
 from simulation_page import SimulationPage
 from visual_theme import icon
@@ -52,12 +52,13 @@ QLabel#metricValue { color: #101C30; font-size: 34px; font-weight: 700; }
 QLabel#metricCaption, QLabel#rowCount { color: #627995; }
 QLabel#sectionTitle { color: #101C30; font-size: 17px; font-weight: 650; }
 QLabel#sourceStatus { color: #DCE4EE; font-size: 12px; }
-QPushButton#openFolder {
+QPushButton[dataAction="true"] {
     background: #24364B; color: #F5F8FC; border: 1px solid #627995;
     border-radius: 7px; padding: 9px; outline: none;
 }
-QPushButton#openFolder:hover, QPushButton#openFolder:focus { border-color: #55D6CB; }
-QPushButton#openFolder:disabled { color: #A8B9CC; }
+QPushButton[dataAction="true"]:hover, QPushButton[dataAction="true"]:focus { border-color: #55D6CB; }
+QPushButton[dataAction="true"]:checked { background: #115E59; border-color: #5EEAD4; }
+QPushButton[dataAction="true"]:disabled { color: #A8B9CC; }
 QLineEdit, QPlainTextEdit, QTextEdit, QTableView {
     background: white; color: #24364B; border: 1px solid #DCE4EE;
     border-radius: 8px; selection-background-color: #D9F4EF;
@@ -118,6 +119,7 @@ QPushButton#previewRemoval, QPushButton#resetSimulation, QPushButton[solutionAct
     border-radius: 8px; padding: 8px 14px; font-weight: 600;
 }
 QPushButton#previewRemoval:hover, QPushButton[solutionAction="true"]:hover { background: #55D6CB; }
+QPushButton#previewRemoval, QPushButton#resetSimulation, QPushButton#logout { outline: none; }
 QPushButton#resetSimulation { background: white; border-color: #DCE4EE; }
 QPushButton#resetSimulation:hover { background: #EAF0F7; }
 QPushButton#previewRemoval:focus, QPushButton#resetSimulation:focus, QPushButton[solutionAction="true"]:focus { border-color: #101C30; }
@@ -127,6 +129,18 @@ QPushButton#previewRemoval:disabled, QPushButton#resetSimulation:disabled, QPush
 """
 
 
+def csv_snapshot(folder):
+    """Track changes, including files replaced by a spreadsheet editor."""
+    signatures = []
+    for name in SCHEMAS:
+        try:
+            info = (folder / name).stat()
+            signatures.append((info.st_mtime_ns, info.st_ctime_ns, info.st_size, info.st_ino))
+        except OSError:
+            signatures.append(None)
+    return tuple(signatures)
+
+
 class ReviewLoadThread(QThread):
     def __init__(self, folder, review_date, parent):
         super().__init__(parent)
@@ -134,10 +148,14 @@ class ReviewLoadThread(QThread):
         self.review_date = review_date
         self.result = None
         self.error = None
+        self.snapshot = ()
 
     def run(self):
         try:
+            self.snapshot = csv_snapshot(self.folder)
             self.result = load_review(self.folder, self.review_date)
+            if csv_snapshot(self.folder) != self.snapshot:
+                self.error = "CSV files are changing. Rescan after the save completes."
         except (DataValidationError, OSError) as error:
             LOGGER.warning("Data folder rejected: %s", error)
             self.error = str(error)
@@ -153,6 +171,11 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.review_date = review_date
         self.data_folder = None
+        self._scan_snapshot = ()
+        self._source_text = "No dataset loaded\n0 CSV files"
+        self._live_timer = QTimer(self)
+        self._live_timer.setInterval(1000)
+        self._live_timer.timeout.connect(self.scan_csv_changes)
         self._load_thread = None
         self._close_after_load = False
         self.setWindowTitle("PriVis")
@@ -245,12 +268,19 @@ class MainWindow(QMainWindow):
         self.source_status.setObjectName("sourceStatus")
         self.source_status.setTextFormat(Qt.TextFormat.PlainText)
         self.source_status.setWordWrap(True)
-        sidebar_layout.addWidget(self.source_status)
-        self.open_folder = QPushButton("Open Data Folder…")
-        self.open_folder.setObjectName("openFolder")
+        self.open_folder = QPushButton("Import CSV Dataset…")
+        self.open_folder.setProperty("dataAction", True)
         self.open_folder.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect, False)
-        self.open_folder.clicked.connect(self.choose_folder)
+        self.open_folder.clicked.connect(self.choose_csv)
         sidebar_layout.addWidget(self.open_folder)
+        self.live_scan = QPushButton("Live CSV Scan")
+        self.live_scan.setProperty("dataAction", True)
+        self.live_scan.setCheckable(True)
+        self.live_scan.setToolTip("Automatically reload the active dataset when its CSV files change.")
+        self.live_scan.setEnabled(False)
+        self.live_scan.toggled.connect(self.toggle_live_scan)
+        sidebar_layout.addWidget(self.live_scan)
+        sidebar_layout.addWidget(self.source_status)
         layout.addWidget(sidebar)
         content_column = QVBoxLayout()
         content_column.setContentsMargins(0, 0, 0, 0)
@@ -263,20 +293,47 @@ class MainWindow(QMainWindow):
         content_column.addWidget(self.load_error)
         content_column.addWidget(self.pages, stretch=1)
         layout.addLayout(content_column, stretch=1)
-        self.load_folder(data_folder)
+        if data_folder is None:
+            self.source_status.setText(self._source_text)
+        else:
+            self.load_folder(data_folder)
 
-    def choose_folder(self):
+    def choose_csv(self):
         start = self.data_folder or DEFAULT_DATA_FOLDER
-        path = QFileDialog.getExistingDirectory(self, "Open PriVis Data Folder", str(start))
-        if path:
-            self.load_folder(path)
+        files = ", ".join(SCHEMAS)
+        paths, _ = QFileDialog.getOpenFileNames(
+            self, "Select PriVis Dataset CSV Files", str(start), "CSV files (*.csv)",
+        )
+        if not paths:
+            return
+        selected = [Path(path) for path in paths]
+        folders = {path.parent for path in selected}
+        if len(folders) != 1 or any(path.name not in SCHEMAS for path in selected):
+            self.load_error.setText(f"Select PriVis CSV files from the same folder: {files}.")
+            self.load_error.show()
+            return
+        self.load_folder(selected[0].parent)
+
+    def toggle_live_scan(self, enabled):
+        self.live_scan.setText("Live CSV Scan: On" if enabled else "Live CSV Scan")
+        if enabled:
+            self._live_timer.start()
+            self.scan_csv_changes()
+        else:
+            self._live_timer.stop()
+
+    def scan_csv_changes(self):
+        if self.data_folder is None or self._load_thread is not None:
+            return
+        if csv_snapshot(self.data_folder) != self._scan_snapshot:
+            self.load_folder(self.data_folder)
 
     def load_folder(self, folder):
         if self._load_thread is not None:
             return
         folder = Path(folder)
         self.load_error.hide()
-        self.source_status.setText(f"Loading {folder.name}…")
+        self.source_status.setText(f"{self._source_text}\nLoading {folder.name}…")
         self.open_folder.setEnabled(False)
         worker = ReviewLoadThread(folder, self.review_date or date.today(), self)
         self._load_thread = worker
@@ -292,26 +349,31 @@ class MainWindow(QMainWindow):
             return
         self.open_folder.setEnabled(True)
         if worker.error is not None:
-            status = "No dataset loaded"
-            if self.data_folder is not None:
-                status = f"Still showing {self.data_folder.name}"
-            self.source_status.setText(status)
+            if worker.folder == self.data_folder:
+                self._scan_snapshot = worker.snapshot
+            self.source_status.setText(self._source_text)
             self.load_error.setText(f"Could not open the data folder. {worker.error}")
             self.load_error.show()
             return
 
         review = worker.result
         self.data_folder = worker.folder
+        self._scan_snapshot = worker.snapshot
+        self.live_scan.setEnabled(True)
         self.simulations.set_data(review)
         self.advanced.set_data(review)
         self.overview.set_data(review)
         self.users.set_data(review.user_rows, review.user_detail)
         self.groups.set_data(review.group_rows, review.group_detail)
         self.findings.set_data(review.finding_rows, review.finding_detail)
-        self.source_status.setText(f"{worker.folder.name} · Read only\nAs of {review.review_date}")
-        self.source_status.setToolTip(str(worker.folder))
+        name = "Built-in sample" if self.data_folder.resolve() == DEFAULT_DATA_FOLDER.resolve() else self.data_folder.name
+        self._source_text = f"Source: {name}\n{len(SCHEMAS)} CSV files · Read only\nAs of {review.review_date}"
+        self.source_status.setText(self._source_text)
+        files = "\n".join(SCHEMAS)
+        self.source_status.setToolTip(f"{self.data_folder}\n{files}")
 
     def closeEvent(self, event):
+        self._live_timer.stop()
         if self._load_thread is not None:
             self._close_after_load = True
             self.hide()
