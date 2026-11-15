@@ -1,0 +1,9 @@
+group_id,group_name,risk_level,resource_scope,description
+G001,Customer-Support,Low,CRM - customer records,Read and update routine customer support tickets
+G002,Payroll-Editors,High,Payroll application,Edit payroll records and payroll adjustments
+G003,Server-Admins,Critical,Server administration,Privileged access to managed company servers
+G004,Sales-Reports,Low,Sales reporting portal,Read and create standard sales reports
+G005,Finance-Reports,Medium,Financial reporting portal,Read internal financial reports
+G006,HR-Records,High,HR records application,View and update confidential employee records
+G007,Helpdesk-Reset,High,IT service desk,Reset company account credentials within approved scope
+G008,All-Employees,Low,Company intranet,Read internal general company resources

@@ -1,0 +1,27 @@
+role,group_id,access_decision,policy_reason
+Support Rep,G001,Allowed,Support team requires customer ticket access
+Support Rep,G002,Denied,Support role must not edit payroll
+Support Rep,G008,Allowed,General intranet for all current workers
+IT Admin,G003,Allowed,IT administrator has approved server administration duties
+IT Admin,G007,Allowed,IT administrator can manage service desk credential resets
+IT Admin,G008,Allowed,General intranet access
+IT Contractor,G003,Approval Required,Privileged server access requires a time-limited exception
+IT Contractor,G008,Allowed,General intranet available during active contract
+Sales Rep,G004,Allowed,Sales representatives require sales reporting
+Sales Rep,G005,Denied,Sales representatives should not access financial reporting
+Sales Rep,G008,Allowed,General intranet access
+Finance Analyst,G005,Allowed,Finance analysts require financial reports
+Finance Analyst,G008,Allowed,General intranet access
+Payroll Specialist,G002,Allowed,Payroll specialists maintain payroll data
+Payroll Specialist,G005,Allowed,Payroll specialists can view financial reports
+Payroll Specialist,G008,Allowed,General intranet access
+Sales Manager,G004,Allowed,Sales managers require sales reporting
+Sales Manager,G005,Approval Required,Finance reporting for Sales managers requires documented approval
+Sales Manager,G008,Allowed,General intranet access
+HR Coordinator,G006,Allowed,HR coordinators manage employee records
+HR Coordinator,G008,Allowed,General intranet access
+IT Support,G007,Allowed,IT support staff perform credential resets
+IT Support,G008,Approval Required,IT Support intranet access requires documented onboarding approval
+Finance Manager,G002,Allowed,Finance managers may manage payroll operations
+Finance Manager,G005,Allowed,Finance managers require financial reports
+Finance Manager,G008,Allowed,General intranet access
